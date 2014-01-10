@@ -1,0 +1,31 @@
+%rdi is the argument register
+%eax is the return value
+%rax is the return value
+
+
+%rsi
+%rdx
+%rcx
+%r8
+%r9
+%r10
+%r11
+
+
+First Example:
+Count the number of elements in an array.
+
+f(int*p)
+  length = 0;
+top: t = *p
+     if t == 0 goto done
+     length = length + 1
+     p = p + 4
+     goto top
+done:
+  return length;
+
+Using the registers:
+p %rdi (64 bit address)
+length %eax
+t %es

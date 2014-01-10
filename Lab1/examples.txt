@@ -1,0 +1,381 @@
+------------------------------------------------------------------------
+x86-64 Assembly Language Programming Examples
+Mark P Jones, Portland State University
+------------------------------------------------------------------------
+
+This file describes some examples of x86-64 assembly language
+programming, all designed to be executed in a similar context to the
+programs that you'll be asked to write for Homework 1.  If you're not
+familiar with x86-64 assembly language programming, or even if you're
+just a bit rusty, then these examples should help to get you started,
+and also to give you some ideas and programming tips.  The purpose of
+these examples is to build familiarity and confidence with the basics
+of programming in x86-64 assembly language.  Clarity and correctness
+are our primary goals.  In particular, we're not looking to demonstrate
+mastery of the full instruction set and we're not going to worry about
+performance or code size.
+
+In each of these examples, the goal is to write a fragment of x86-64
+code that takes the address of an array of (32 bit/4 byte) integers as
+its input in the rdi register and returns a result in the eax register.
+In each case, we will assume that the elements of the array are stored
+in successive locations in memory, each 4 bytes wide, with the first
+entry at the address that is provided in rdi.  We will also assume that
+the array is terminated with a zero and that it contains at least one
+element before that terminating zero is reached.
+
+This file shows assembly language fragments for each of the following
+examples:
+
+Example 1: Return the length of the input array in %eax.
+
+Example 2: Return the largest number from the array in %eax.
+
+Example 3: Return the position of the largest number in the array
+           in %eax.
+
+Example 4: Return the average value of the numbers in the array using
+           integer division and ignoring any remainder.
+
+Example 5: Reverse the order of the elements in the array, without
+           using any additional storage.
+
+Example 6: Sort the elements in the array into increasing numerical
+           order, without using any additional storage.  (No algorithmic
+           sophistication should be expected here!)
+
+For testing purposes, I have provided a main.c program that runs the
+assembly language code on three examples and also shows the contents
+of the array before and after the call.  The latter is particularly
+useful for Examples 5 and 6 that modify the array but don't return a
+useful result.
+
+----------------------
+#include <stdio.h>
+
+extern int f(int*);
+
+void printArray(char* msg, int* a) {
+  for (; *a; ++a) {
+    printf("%s%d", msg, *a);
+    msg = ", ";
+  }
+  printf("\n");
+}
+
+int main() {
+  int a[] = { 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7, 0 };
+  printArray("Before: ", a);
+  printf("first result is %d\n", f(a));
+  printArray("After: ", a);
+
+  int b[] = { 45, 23, 66, 18, 21, 10, 31, 75, 0 };
+  printArray("Before: ", b);
+  printf("second result is %d\n", f(b));
+  printArray("After: ", b);
+
+  int c[] = { -45, 23, -21, 10, 75, -90, 0 };
+  printArray("Before: ", c);
+  printf("third result is %d\n", f(c));
+  printArray("After: ", c);
+
+  printf("\n");
+  return 0;
+}
+
+----------------------
+Sample programs for each of the six examples follow.  I've used lots
+of comments (on lines beginning with the # character) in the hope that
+you'll be better able to understand my code.  I've also tried very hard
+to stick to using only the instructions that I showed you in class.
+
+There are 16 general purpose registers that can be used in x86-64 code.
+We adopt the conventions of the "System V Application Binary Interface
+(ABI)" for how these registers can be used in the code sequences that
+we write:
+
+ - The input parameter is in rdi.
+
+ - rsp holds the stack pointer and should not be used for other
+   purposes.
+
+ - If the code uses rbx, rbp, r12, r13, r14, or r15, then it MUST
+   restore them to their original values before it ends.  (One way
+   to accomplish this is to pushq the register value on to the stack
+   at the beginning of the code and then popq it off at the end.
+   Fortunately, there are plenty of registers for simple tasks, so we
+   won't need to do this too often; indeed, we won't need it at all
+   for these examples.)
+
+ - The code can freely use the following registers:
+     rax                      (return result)
+     rsi, rdx, rcx, r8, r9    (arguments 2-6)
+     r10, r11                 (caller saved)
+
+Also remember that each of the registers named above holds a 64
+bit value, which is appropriate when we're working with pointers or
+addresses or 64 bit integers.  For much of the work that we'll do
+here, however, we'll be using C integers, which are 32 bits wide.
+Fortunately, it is easy to use each of the general purpose registers
+(rax, rsi, rdx, rcx, etc.) as if they were 32 bit registers instead
+(eax, esi, edx, ecx, etc.).  In other words, we replace the "r"
+prefix on each 64 bit register name with an "e" to get the name of
+the corresponding 32 bit register.  Remember also that instructions
+producing 32 bit results typically add an "l" (for "long") suffix,
+while those producing 64 bit results typically add a "q" suffix.
+Thus, you will see instructions like "movl %eax,%edx" to copy the
+value from register eax into register edx, but an instruction like
+"movq %rdi,%rdx" is needed to copy the value from rdi into rdx.
+
+There are LOTS of different ways to write these program, and in fact
+there are almost certainly LOTS of ways to write shorter or faster
+versions too.  So if you were to try writing your own versions, you
+would probably end up with something that looks at least a little
+bit different.
+
+Last but not least, I've only tested my code lightly.  If you think
+you've found an error, then please let me know!  I won't be too
+surprised :-)
+
+----------------------
+### Example 1: return the length of the input array in %eax
+
+        movl    $0, %eax        # initialize length count in eax
+        jmp     test
+loop:   incl    %eax            # increment count
+        addq    $4, %rdi        # and move to next array element
+
+test:   movl    (%rdi), %ecx    # load array element
+        cmpl    $0, %ecx        # test for end of array
+        jne     loop            # repeat if we're not done ...
+
+----------------------
+### Example 2: return the largest number from the array in %eax
+### We've been told that it's ok to assume that the array is nonempty ...
+
+        movl    (%rdi), %eax    # get the first element in the array
+loop:   addq    $4, %rdi        # move to the next element
+        movl    (%rdi), %ecx    # load next array element
+        cmpl    $0, %ecx        # end of the array?
+        je      done
+        cmpl    %ecx, %eax      # compare ecx with largest so far (%eax)
+        jnl     loop            # continue if %eax still largest
+        movl    %ecx, %eax      # we've found a new largest value
+        jmp     loop
+done:
+
+----------------------
+### Example 3: return the position of the largest number from the array
+### in %eax.  Similar to the code for Example 2, except that we use
+### %edx to hold the biggest number found so far, which frees up the %eax
+### register to hold the position of that biggest number in the array.
+### We also need a register (we'll use %esi) to count the number of the
+### current element.
+
+        movl    $0, %esi        # first element is index 0
+        movl    %esi, %eax      # position of first element in the array
+        movl    (%rdi), %edx    # value of first element in the array
+
+loop:   addq    $4, %rdi        # move to next array element
+        incl    %esi            # update count
+        movl    (%rdi), %ecx    # and load in value
+
+        cmpl    $0, %ecx        # are we done?
+        je      done
+
+        cmpl    %ecx, %edx      # compare this element with current max
+        jnl     loop            # continue if current max still largest
+
+        movl    %esi, %eax      # save index of new largest value
+        movl    %ecx, %edx      # save new largest value
+        jmp     loop
+done:
+
+----------------------
+### Example 4: return the average value of the numbers in the array.
+### We're going to divide by the length of the array so it is nice to
+### have the assumption stated that the array is not empty....
+
+        movl    $1, %ecx        # ecx will count the number of elements
+        movl    (%rdi), %eax    # eax will record the running total
+
+loop:   addq    $4, %rdi        # move to next element in the array
+        movl    (%rdi), %edx    # read array element
+        cmpl    $0, %edx        # are we done?
+        je      done
+        addl    %edx, %eax      # add to running total
+        incl    %ecx            # increment count
+        jmp     loop
+
+        # When we reach this point in the program, %eax will
+        # contain the total of all the array elements and ecx
+        # contain the number of array elements.
+done:   cltd			# sign extend %eax into %edx
+	idivl   %ecx            # quotient goes in %eax, as required ...
+
+----------------------
+### Example 5: Reverse the order of the elements in the array,
+### without using any additional storage.  This requires a
+### little more algorithmic sophistication ...
+
+### First we'll search to the end of the array to find the address
+### of the last array element in %rdx:
+
+        movq    %rdi, %rdx      # initialize %rdx at start of array
+loop1:  addq    $4, %rdx        # move to next array element
+        movl    (%rdx), %eax    # read in array element
+        cmpl    $0, %eax        # are we done?
+        jne     loop1
+        # At this point, %edx holds the address of the zero element
+        subq    $4, %rdx        # adjust %rdx to point to the last element
+
+### Our next step is to swap pairs of elements, exchanging the value
+### in memory at %rdi with the value in memory at %rdx.  After each
+### exchange, we add $4 to %rdi and subtract $4 from %rdx.  This
+### process stops when %rdi >= %rdx, at which point we can be sure
+### that the array has been reversed:
+
+loop2:  cmpq    %rdx, %rdi      # compare pointers at two ends of array
+        jnl     done
+        movl    (%rdi), %ecx    # read values from each end of the array
+        movl    (%rdx), %eax
+        movl    %eax, (%rdi)    # write them back in reverse order
+        movl    %ecx, (%rdx)
+        addq    $4, %rdi        # adjust pointers at each end of array
+        subq    $4, %rdx
+        jmp     loop2           # and repeat ...
+
+done:   # the problem description doesn't specify what value should be
+        # returned in %eax so we won't worry about it here ...
+
+----------------------
+### Example 6: Sort the elements in the array into increasing order.
+### We'll use a form of selection sort here.
+
+sort:   movl    (%rdi), %eax    # get value at start of array
+        cmpl    $0, %eax        # are we done?
+        je      done
+
+        movq    %rdi, %rdx      # prepare to scan forward over array
+scan:   addq    $4, %rdx
+        movl    (%rdx), %ecx
+        cmpl    $0, %ecx        # reached end of array?
+        je      save
+        cmpl    %eax, %ecx      # is this smaller than previous minimum?
+        jnl     scan
+        movl    %eax, (%rdx)    # save previous smallest back in array
+        movl    %ecx, %eax      # and move new smallest into eax
+        jmp     scan
+
+save:   movl    %eax, (%rdi)    # save smallest number at front of array
+        addq    $4, %rdi        # now sort the rest of the array
+        jmp     sort
+
+done:   # the problem description doesn't specify what value should be
+        # returned in %eax so we won't worry about it here ...
+
+----------------------
+To use one of the code fragments above:
+
+- Make a copy of the appropriate template (linux.s or mac.s) in
+  a file called exampleN.s, where N is the example number.
+
+- Edit the line at the top of the file to replace the name
+  "linux.s" or "mac.s" with the true filename, "exampleN.s".
+
+- Copy the assembly language text from this file into exampleN.s
+  between the lines that mark the section where your code should be
+  inserted.  (This will replace the dummy code that just loads a
+  value 42 into the eax register.)
+
+Now you can compile and run the resulting program using the
+following lines (again, replacing N with the appropriate example
+number):
+
+  gcc -o exampleN main.c exampleN.s
+  ./exampleN
+
+Alternatively, you can use the provide Makefile, which compiles and
+runs all of the example programs when you enter the make command:
+
+  prompt$ make
+  gcc -O -o example1 main.c example1.s
+  gcc -O -o example2 main.c example2.s
+  gcc -O -o example3 main.c example3.s
+  gcc -O -o example4 main.c example4.s
+  gcc -O -o example5 main.c example5.s
+  gcc -O -o example6 main.c example6.s
+
+  ./example1 "Length of Array"
+  Before: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  first result is 11
+  After: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  Before: 45, 23, 66, 18, 21, 10, 31, 75
+  second result is 8
+  After: 45, 23, 66, 18, 21, 10, 31, 75
+  Before: -45, 23, -21, 10, 75, -90
+  second result is 6
+  After: -45, 23, -21, 10, 75, -90
+  
+  ./example2 "Largest Number in Array"
+  Before: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  first result is 11
+  After: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  Before: 45, 23, 66, 18, 21, 10, 31, 75
+  second result is 75
+  After: 45, 23, 66, 18, 21, 10, 31, 75
+  Before: -45, 23, -21, 10, 75, -90
+  second result is 75
+  After: -45, 23, -21, 10, 75, -90
+  
+  ./example3 "Position of Largest Number in Array"
+  Before: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  first result is 6
+  After: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  Before: 45, 23, 66, 18, 21, 10, 31, 75
+  second result is 7
+  After: 45, 23, 66, 18, 21, 10, 31, 75
+  Before: -45, 23, -21, 10, 75, -90
+  second result is 4
+  After: -45, 23, -21, 10, 75, -90
+  
+  ./example4 "Average of Numbers in Array"
+  Before: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  first result is 6
+  After: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  Before: 45, 23, 66, 18, 21, 10, 31, 75
+  second result is 36
+  After: 45, 23, 66, 18, 21, 10, 31, 75
+  Before: -45, 23, -21, 10, 75, -90
+  second result is -8
+  After: -45, 23, -21, 10, 75, -90
+  
+  ./example5 "Reverse Numbers in Array"
+  Before: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  first result is 11
+  After: 7, 4, 1, 9, 11, 10, 2, 8, 6, 3, 5
+  Before: 45, 23, 66, 18, 21, 10, 31, 75
+  second result is 21
+  After: 75, 31, 10, 21, 18, 66, 23, 45
+  Before: -45, 23, -21, 10, 75, -90
+  second result is 10
+  After: -90, 75, 10, -21, 23, -45
+  
+  ./example6 "Sort Numbers in Array"
+  Before: 5, 3, 6, 8, 2, 10, 11, 9, 1, 4, 7
+  first result is 0
+  After: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+  Before: 45, 23, 66, 18, 21, 10, 31, 75
+  second result is 0
+  After: 10, 18, 21, 23, 31, 45, 66, 75
+  Before: -45, 23, -21, 10, 75, -90
+  second result is 0
+  After: -90, -45, -21, 10, 23, 75
+
+  prompt$
+
+Note that I added a string argument to each of the example programs
+here; the program doesn't actually look at the argument, but including
+them does makes the output (a little) easier to read ...
+
+------------------------------------------------------------------------
