@@ -1,0 +1,1023 @@
+------------------------------------------------------------------------
+CS 322 Lab 2: Instructions for the "interpretour"
+
+Your mission: Construct a sequence of interpreters, showing how we can
+add support for a range of interesting programming language features!
+
+Try to get as far as you can, but we don't expect you to finish.  And
+we'd rather you understand the parts you do than try to get more done
+without understanding it so well.
+
+If you get stuck in any way, please ask for help!
+
+========================================================================
+Preliminaries:  This file describes a sequence of steps that you can
+follow to create a collection of interpreters, each adding new features
+to the Is interpreter that was presented in the Week 2 lecture.  Do not
+assume that the code will compile without errors after each step.  On
+the other hand, if the instructions suggest that the code should
+compiler after a particular step, then you are strongly encouraged to
+try recompiling (usually by typing javac *.java) as a way to test that
+you've followed all of the instructions up to that point.
+
+These instructions are written assuming that you are working on the
+command line and using a text editor.  Pick an editor that you have some
+experience with, and, ideally, that can do "find and replace"
+operations.  You can also do these exercises using a tool like Eclipse,
+but you should only do that if you already have some expertise using
+that tool, and if you are comfortable adapting the rest of these
+instructions as necessary.
+
+------------------------------------------------------------------------
+1) Download the interpretour.zip file (if you have a copy of this file,
+then you've probably already done that), unzip it, and change in to the
+interpretour subdirectory:
+
+  unzip interpretour
+  cd interpretour
+
+------------------------------------------------------------------------
+2) Make a copy of the Is folder that you can work in:
+
+  cp -r Is Lab
+  cd Lab
+
+(The -r argument to cp is a flag indicating that the full directory
+contents should be copied; it's short for "recursive".)
+
+Note that we'll be doing all of the remaining work inside the Lab
+directory that you've just created here.
+ 
+------------------------------------------------------------------------
+3) Most of the changes that you'll be making as you work through this
+lab will be in the Src.java file.  You might want to take a look at
+the code in that file first to familiarize yourself with what is
+there.  (Of course, looking at the other files would be a good idea
+too; there aren't very many of them to review ...)
+
+
+
+========================================================================
+A simple imperative language (Is)
+This is the language, with its associated interpreter, that was
+presented in the Week 2 lecture.
+
+------------------------------------------------------------------------
+1) Try compiling (javac *.java) and then try running the Main program,
+just to be sure you have everything working correctly.
+
+------------------------------------------------------------------------
+2) Add a new abstract syntax class for Multiply expressions.  (You
+can use one of the existing classes as your model ...)
+
+------------------------------------------------------------------------
+3) Modify the abstract syntax for the test program in Main.java
+to compute a factorial rather than a sum.
+
+[Don't spend a lot of time figuring out how to do this; you don't
+actually need to write new abstract syntax code ... just change the
+way the two variables are initialized, setting both to 1, and then
+change the part of the abstract syntax that represents t+i to
+something that instead represents t*i ... Once you've done this,
+you're likely to see an output of 3628800, which is 10 factorial!]
+
+------------------------------------------------------------------------
+4) Test, to make sure it works as you expect.  (Don't forget to
+recompile everything first!)
+
+
+========================================================================
+Dynamically Typed (DT):  We're going to modify our code to support a
+dynamically typed language in which a single variable can hold different
+types of value at different points in the code.
+
+------------------------------------------------------------------------
+1) Introduce the Value class, with subclasses for integers and Booleans:
+
+  abstract class Value {
+    abstract String show();
+  }
+
+  class BValue extends Value {
+    private boolean b;
+    BValue(boolean b) { this.b = b; }
+
+    String show() {
+      return Boolean.toString(b);
+    }
+  }
+
+  class IValue extends Value {
+    private int i;
+    IValue(int i) { this.i = i; }
+
+    String show() {
+      return Integer.toString(i);
+    }
+  }
+
+------------------------------------------------------------------------
+2) Let's modify the Memory so that it can store arbitrary Values.
+We'll also change the memory load operation to trigger an error
+if a program accesses an uninitialized variable:
+
+   class Memory {
+     private Hashtable<String,Value> memory
+        = new Hashtable<String,Value>();
+
+     Value load(String name) {
+       Value val = memory.get(name);
+       if (val==null) {
+         System.out.println("ABORT: Variable " + name + " not defined");
+         System.exit(1);
+       }
+       return val;
+     }
+
+     void store(String name, Value val) {
+       memory.put(name, val);
+     }
+   }
+
+   Note how easy this was ... we can now store any type of Value in
+   memory, so long as it is represented using a subclass of Value.
+
+------------------------------------------------------------------------
+3) Merge the IExpr and BExpr types into a single Expr type:
+
+-  Delete the abstract BExpr class.
+
+-  Replace all occurrences of IExpr and BExpr with Expr.
+
+-  Combine the comments showing the grammar for integer
+   and boolean expressions into a single comment.  (This won't
+   change the behavior of the code, but it will keep the comments
+   up to date, and comments are an important part of program
+   documentation.)
+
+-  Modify the definition of every eval() method to return a
+   Value instead of an int or boolean.
+
+------------------------------------------------------------------------
+4) But what about the places where the code actually needs a specific
+type of value?  For example, if and while loops require a boolean test,
+print requires an integer argument, and addition requires two integer
+arguments.
+
+- Add an asBool() method to the Value and BValue classes:
+
+  // in Value:
+  boolean asBool() {
+    System.out.println("ABORT: Boolean value expected");
+    System.exit(1);
+    return true; // Not reached
+  }
+
+  // in BValue:
+  boolean asBool() { return b; }
+
+  Now, whenever you have a Value v and you need to make sure that
+  it's actually a boolean, you can use v.asBool().
+
+- Add a corresponding asInt() method to the Value and IValue
+  classes.
+
+- Add calls to asBool() or asInt() in the places where they are
+  needed to ensure that an eval() call returns a specific type of
+  value.  For example, in the Print class, exp.eval(mem) should be
+  rewritten as exp.eval(mem).asInt().  As another example, the
+  eval() method for the LT class will look like this once you are
+  done:
+
+  Value eval(Env env) {
+    return l.eval(env).asInt() < r.eval(env).asInt();
+  }
+
+  The point here is that the two arguments of a less than comparison
+  are supposed to be integers, so we need to call the asInt() method
+  on the two values rbnefore we try to compare them.
+
+  Note that Assignment operations do NOT require an asInt() or asBool()
+  because now we can store any type of value in our Memory objects ...
+
+  Don't expect this code to compile yet ... we've more work to do!
+
+------------------------------------------------------------------------
+5) Any eval() method definitions that return an int value should be
+modified to wrap their result in a new IValue(...) call.  Similarly,
+any eval() method definitions that return a boolean value should be
+modified to wrap their result in a new BValue(...) call.  This change
+is necessary because we previously modified the return type for eval
+to produce Value results instead of ints or booleans.
+
+For example, the eval() method for Int will look something like this:
+
+  Value eval(Memory mem) { return new IValue(num); }
+
+As another example, with this change, your implementation of eval()
+in the LT class will look something like the following:
+
+  Value eval(Env env) {
+    return new BValue(l.eval(env).asInt() < r.eval(env).asInt());
+  }
+
+Why? We've added the "new BValue(...)" wrapper because the result
+of a comparison is a boolean, but eval() is supposed to return
+something of type Value.
+
+------------------------------------------------------------------------
+6) Try compiling: javac *.java
+   Fix any errors that are reported.
+
+   Try running:   java Main
+
+------------------------------------------------------------------------
+7) Make a copy of ../extras/MainDT.java and try running that:
+
+   cp ../extras/MainDT.java .
+   javac *.java
+   java MainDT
+
+------------------------------------------------------------------------
+8) Would you like to keep a snapshot of your code?  I'd recomment that,
+doing something like the following:
+
+   mkdir DT
+   cp *.java DT
+
+   Ready for some more?
+
+
+
+========================================================================
+Nested scopes (Nest): We'll switch to using environments instead of
+memories for storing variable values.  This is a first step toward
+adding support for functions.
+
+------------------------------------------------------------------------
+1) First, let's clean up after DT.  Type carefully, you don't want to
+delete the wrong files!
+
+   rm *.class
+
+------------------------------------------------------------------------
+2) Replace every (Memory mem) with (Env env), and every (mem) with (env).
+The code will not compile at this point, so don't be alarmed if you try
+and that produces errors!
+
+------------------------------------------------------------------------
+3) Switch from using memories to environments.
+
+-  Delete Memory.java
+
+-  Add Env.java with the following code:
+
+   class Env {
+     private String var;
+     private Value  val;
+     private Env    rest;
+     Env(String var, Value val, Env rest) {
+       this.var = var; this.val = val; this.rest = rest;
+     }
+
+     Value getValue() { return val; }
+
+     void  setValue(Value val) { this.val = val; }
+
+     static Env lookup(Env env, String name) {
+       for (; env!=null; env=env.rest) {
+         if (name.equals(env.var)) {
+           return env;
+         }
+       }
+       System.out.println("ABORT: Variable " + name + " not defined");
+       System.exit(1);
+       return null; // not reached
+     }
+   }
+
+- Modify the code for loading a variable from memory in Var to
+  lookup an environment entry and then get the value that is
+  stored there.  The resulting method should look something
+  like this:
+
+   Value eval(Env env) { return Env.lookup(env, name).getValue(); }
+
+- Make a corresponding change to the implementation of exec()
+  in the Assign class.
+
+- Update Main.java and MainDT.java to pass a null environment to
+  exec() instead of creating an empty Memory.
+
+------------------------------------------------------------------------
+4) Modify the exec() method so that it returns an Env value instead of
+void.  The intuition here is that the input parameter represents the
+environment when the statement begins to execute, and the return result
+is the environment at the end.  Assume, in general, the a statement
+could change the environment (although none of the statements that
+we have right now can do this).  For example, the implementation of
+exec() in the Seq class will look something like this:
+
+  Env exec(Env env) {
+    return r.exec(l.exec(env));
+  }
+
+Do you see why?
+
+------------------------------------------------------------------------
+5) Compile and run java Main
+What goes wrong?  Why?  And how should we fix it?
+
+------------------------------------------------------------------------
+6) Let's add a new variable declaration construct:
+
+class VarDecl extends Stmt {
+  private String var;
+  private Expr   expr;
+  VarDecl(String var, Expr expr) {
+    this.var = var; this.expr = expr;
+  }
+
+  Env exec(Env env) {
+    return new Env(var, expr.eval(env), env);
+  }
+
+  void print(int ind) {
+    indent(ind);
+    System.out.println("var " + var + " = " + expr.show() + ";");
+  }
+}
+
+------------------------------------------------------------------------
+7) Modify the first two statements in the test program in Main.java
+to use VarDecl constructs instead of Assign constructs.  Recompile
+and test.  How does this look now?
+
+See if you can update MainDT in a corresponding way.
+
+------------------------------------------------------------------------
+8) Make a copy of ../extras/MainNest.java and try running that:
+
+   cp ../extras/MainNest.java .
+   javac *.java
+   java MainNest
+
+------------------------------------------------------------------------
+9) Time for another snapshot!
+
+   mkdir Nest
+   cp *.java Nest
+
+   And onward!
+
+
+========================================================================
+Proc: Now we're going to extend our language so that each program
+can include the definition of zero or more procedures; these are like
+void functions in C or Java because they don't return a result.  We'll
+need a new abstract syntax for programs that contain procedures, and
+we'll need an abstract syntax for a procedure call statement.
+
+------------------------------------------------------------------------
+1) Clean up time!
+
+   rm *.class
+
+------------------------------------------------------------------------
+2) Add the following class to provide an abstract syntax for complete
+programs (we'll add some more code shortly to represent a collection of
+procedures):
+
+  class Program {
+    private Stmt body;
+
+    Program(Stmt body) {
+      this.body = body;
+    }
+
+    void run() {
+      body.exec(this, null);
+    }
+
+    void print() {
+      body.print(4);
+      System.out.println();
+    }
+  }
+
+------------------------------------------------------------------------
+3) You might have noticed that the exec() call in the above now has two
+parameters, including a new Program argument represented by "this".  We
+need to include this as a parameter to exec() so that our programs will
+be able to look up procedure definitions if they encounter a call.  But
+this also means that we need to make some updates to the rest of our
+code:
+
+- Change the definition of every exec() method to have a type of the
+  form:  Env exec(Program prog, Env env)  [Hint: you can probably find
+  all of the places that need to be changed by searching for occurrences
+  of the string "Env exec".
+
+- Change all of the calls to exec to include an extra "prog" parameter.
+  Again, you can probably find all of the places that you need to
+  change by searching for occurrences of the string ".exec(" ...
+
+- Note that we don't have to change any of the definitions for eval().
+  Why not?
+
+- Modify each of the Main*.java files to construct and use a Program
+  object, as in the following:
+
+    Program prog = new Program(s);
+
+    System.out.println("Complete program is:");
+    prog.print();
+
+    System.out.println("Running in an empty environment:");
+    prog.run();
+
+    System.out.println("Done!");
+
+- You should now be able to compile and run the code again.  You
+  shouldn't see any changes in behavior yet, but this is a good
+  way to make sure you haven't broken anything either.
+
+------------------------------------------------------------------------
+4) Now let's add some abstract syntax to represent procedures.  Every
+procedure, of course, has a name, a list of formal parameters, and a
+body (i.e., the code that you'll execute when the procedure is called):
+
+   class Proc {
+     private String   name;
+     private String[] formals;
+     private Stmt     body;
+
+     Proc(String name, String[] formals, Stmt body) {
+       this.name = name; this.formals = formals; this.body = body;
+     }
+
+     String getName() { return name; }
+
+     void print(int ind) {
+       Stmt.indent(ind);
+       System.out.print("procedure " + name + "(");
+       for (int i=0; i<formals.length; i++) {
+         if (i>0) {
+           System.out.print(", ");
+         }
+         System.out.print(formals[i]);
+       }
+       System.out.println(") {");
+
+       body.print(ind+2);
+
+       Stmt.indent(ind);
+       System.out.println("}");
+     }
+   }
+
+  The code should still compile (again, we don't expect a change
+  in behavior yet, but it's nice to know we haven't broken things).
+
+------------------------------------------------------------------------
+5) It's time to extend the abstract syntax for programs to allow each
+one to include a collection of procedure definitions.
+
+-  Change the code at the start of the Program class to define two
+   fields (adding procs to the body field that is already there):
+
+    private Proc[] procs;
+    private Stmt body;
+
+    Program(Proc[] procs, Stmt body) {
+      this.procs = procs; this.body = body;
+    }
+
+    Program(Stmt body) {
+      this(new Proc[] {}, body);
+    }
+
+   Note that the second constructor gives us a simple way to build
+   program values that don't include any procedure definitions.  In
+   particular, this means that all of our current Main programs
+   should continue to compile and run as before.  Go on, try it.
+   You know you want to!
+
+------------------------------------------------------------------------
+6) You probably also want to change the print method in the Program
+class so that it will print each of the procedure definitions out
+for you, if there are any.  This just requires a simple loop over
+the elements of the procs array; you can use the print method from
+the Proc class to do the work of printing out an individual procedure
+definition.
+
+------------------------------------------------------------------------
+7) Now let's add the abstract syntax for procedure calls, each of which
+is just a special kind of statement that specifies the name of the
+procedure to be called and a list of expression arguments (the "actual"
+parameters):
+
+   class Call extends Stmt {
+     private String name;
+     private Expr[] actuals;
+     Call(String name, Expr[] actuals) {
+       this.name = name; this.actuals = actuals;
+     }
+
+     Env exec(Program prog, Env env) {
+       prog.call(env, name, actuals);
+       return env;
+     }
+
+     void print(int ind) {
+       indent(ind);
+       // TODO: fill this in if you want to see calls in the output!
+     }
+   }
+
+------------------------------------------------------------------------
+8) You might have noticed that the exec() method for Call in the code
+above is assuming that we've added a call() method to the Program class.
+This will be used to look up the implementation of the named procedure.
+Something like the following should do the trick:
+
+  void call(Env env, String name, Expr[] actuals) {
+    for (int i=0; i<procs.length; i++) {
+      if (name.equals(procs[i].getName())) {
+        procs[i].call(this, env, actuals);
+        return;
+      }
+    }
+    System.out.println("ABORT: Cannot find function " + name);
+    System.exit(1);
+  }
+
+------------------------------------------------------------------------
+9) Once again, the code that we've just added is pushing off some work
+to another method.  This time, once we've found a procedure with the
+right name, we're invoking the "call" method for that procedure.  This
+will check that we have the right number of parameters, build an
+environment that associates the actual parameter values with each of
+the formal parameters, and then runs the body.  But we haven't written
+the code to do that yet, a problem that is easily fixed:
+
+  // This goes in the Proc class:
+  void call(Program prog, Env env, Expr[] actuals) {
+    if (actuals.length!=formals.length) {
+      System.out.println("ABORT: Wrong number of arguments for " + name);
+      System.exit(1);
+    }
+    Env newenv = null;
+    for (int i=0; i<actuals.length; i++) {
+      newenv = new Env(formals[i], actuals[i].eval(env), newenv);
+    }
+    body.exec(prog, newenv);
+  }
+
+Assuming you added this code in the right place, everything should
+compile and run, just as before.
+
+------------------------------------------------------------------------
+10) Double digits, woot!  Let's celebrate by pulling in a copy of
+a program that actually includes some procedure definitions.  Be
+sure to look at the code so that you can see the details of what
+the full abstract syntax looks like now:
+
+   cp ../extras/MainProc.java .
+   javac *.java
+   java MainProc
+
+
+------------------------------------------------------------------------
+11) Another snapshot already?
+
+   mkdir Proc
+   cp *.java Proc
+
+   And it's time to press on ...
+
+
+========================================================================
+Ref: Our next step will be to extend the interpreter to allow parameter
+passing "by reference".  Normally, when you call a procedure, you pass
+(a copy of) the *value* of each argument; this is widely referred to as
+"call-by-value".  For example, in a sequence of code like the following:
+
+  var x = 2;
+  foo(x)
+  print x;
+
+you would expect that the procedure foo would get its own copy of the
+variable x, that it can freely modify without changing the value in
+the caller's variable of the same name.  With "call-by-reference", the
+procedure definition specifies that the caller must pass a *reference*
+to the argument, essentially pointing at where the argument's value is
+stored rather than passing the value itself.  This means that the
+procedure that is being called does now have the ability to change
+the value in the caller's variable.
+
+One way to indicate this by adding a "ref" keyword in front of the
+formal parameters in a procedure's definition.  For example, suppose
+that the foo() procedure used above were defined as follows:
+
+  procedure foo(ref y) {
+    y = y + 1;
+  }
+
+Now, if we run the sample program at the top of this section, the call
+to foo(x) will pass a reference to the caller's variable x as its
+argument to the procedure.  As such, inside the body of foo(), the
+variable y now holds a reference to the caller's x variable and when
+the interpreter executes the statement y = y + 1, it will actually have
+the effect of executing the caller's variable x.  This means that the
+original program fragment will now print out the value 3 instead of the
+value 2 that you might have expected.
+
+Call-by-reference has a number of useful applications.  One that might
+be important to us here is that it gives us a way to return a value
+(or possibly more than one, if we have multiple call-by-reference
+parameters) from a procedure, simply by assigning to the corresponding
+variable inside the procedure body.
+
+------------------------------------------------------------------------
+1) You might not be surprised to see that we'll start with clean up:
+
+   rm *.class
+
+------------------------------------------------------------------------
+2) In a language with support for call-by-reference, we'll have some
+variables that hold values, and some variables that hold references
+to other variables.  Remember that the values of variables are stored
+in environment structures.  Now that we have two kinds of variable,
+we're going to need two kinds of environment entry.
+
+So let's get started by switching over to Env.java.
+
+- Mark the definition of the Env class as "abstract":  We're going
+  to use different subclasses (ValEnv and RefEnv) for each of the
+  two kinds of variables in our programs, but Env will still be our
+  foundation.
+
+- Move the Value val field out of the Env class, and remove it from
+  the constructor for Env; only ValEnv objects will have an associated
+  Value field from this point on.
+
+- Create a new ValEnv class (it can also be part of Env.java) that
+  looks something like the following:
+
+  class ValEnv extends Env {
+    private Value val;
+
+    ValEnv(String var, Value val, Env rest) {
+      super(var, rest);
+      this.val = val;
+    }
+   }
+
+- Move the definitions of getValue() and setValue() out of Env
+  and in to ValEnv.  And then add abstract definitions for these
+  methods in the original Env class (i.e., with the keyword
+  "abstract" at the start of the line, and with a ";" instead of
+  an implementation.
+
+- If you like, you can try compiling the program at this point.
+  However, you'll need to find the two "new Env" calls in Src.java
+  and replace them with "new ValEnv" calls before that will work.
+
+- Now, back in Env.java, let's create a second kind of environment
+  entry for variables that are references to other variables.  In
+  other words, instead of containing a Value, these environment
+  entries will contain a "ref", which is actually just a pointer
+  to another "Env".  And when somebody tries to get or set the
+  value of a RefEnv using the getValue() or setValue() methods,
+  we'll translate these into calls for the corresponding methods
+  of "ref":
+
+  class RefEnv extends Env {
+    private Env ref;
+
+    RefEnv(String var, Env ref, Env rest) {
+      super(var, rest);
+      this.ref = ref;
+    }
+
+    Value getValue() { return ref.getValue(); }
+
+    void  setValue(Value val) { ref.setValue(val); }
+  }
+
+- At this point, the code should all compile without errors (again,
+  assuming you've replaced the "new Env" calls with "new ValEnv",
+  as described previously).
+
+------------------------------------------------------------------------
+3) Up to this point, we've been representing the formal parameters for
+each procedure by a simple String value.  But now we're going to have
+two kinds of formal parameter, one for call-by-value parameters and one
+for call-by-reference.  As a result, we're going to need a richer
+abstract syntax for formal parameters.  Let's work on that!
+
+- Add a new Formal class in Src.java.  Given that it has a lot to do
+  with procedures, you might want to put it close to the definition of
+  Proc.  Of course, that's your choice :-)
+
+  class Formal {
+    protected String name;
+
+    Formal(String name) {
+      this.name = name;
+    }
+
+    public String toString() {
+      return name;
+    }
+  }
+
+- Add a ByRef class in Src.java.  For simplicity, we'll just have
+  this inherit from Formal for now.  The only real difference
+  between Formal and ByRef at this stage is in how these are
+  viewed as Strings using the toString() method:
+
+  class ByRef extends Formal {
+    ByRef(String name) { super(name); }
+
+    public String toString() {
+      return "ref " + name;
+    }
+  }
+
+- Now update the code in Proc to indicate that the formals are
+  Formal values rather than String values.  For example, you
+  will need to update references to String[] to say Formal[]
+  instead.
+
+- You will also need to update the code in MainProc.java to
+  keep that working.  Replace String[] with Formal[], and
+  wrap each string name that is mentioned in a formal parameter
+  list with a call to "new Formal".  For example, the first
+  line in the abstract syntax for the "sum" procedure should
+  look like this after you've made the changes:
+
+   new Proc("sum", new Formal[] {new Formal("n"), new Formal("a")},
+     ...
+
+- Unfortunately, the code won't quite compile correctly at this
+  point.  But if you try, then "javac" should just report one
+  error, and the line that is causing the problem should look
+  something like the following:
+
+   newenv = new ValEnv(formals[i], actuals[i].eval(env), newenv);
+
+  Just for now, comment that line out.  Now your code should at
+  least compile.  But it won't run properly until we figure out
+  what was wrong in that last line ...
+
+------------------------------------------------------------------------
+4) The problem we had in that last line is that "formals[i]" is
+now a value of type Formal, but the constructor for "ValEnv"
+requires a variable name (i.e., a String) in that spot.
+
+- We don't have an easy way to access the String name for the
+  formal parameter in the code above, but we can solve that by
+  moving the "new ValEnv" constructor into a method in the
+  "Formal" class.  First, replace the line that caused the
+  problem above with:
+
+    newenv = formals[i].extend(env, actuals[i], newenv);
+
+- And now add a definition for extend() in the Formal class:
+
+    Env extend(Env env, Expr expr, Env newenv) {
+      return new ValEnv(name, expr.eval(env), newenv);
+    }
+
+  Notice that we don't have a problem here in supplying the
+  required "name" argument to the "new ValEnv" call!
+
+  And, just in case it isn't clear, we've chosen the name
+  "extend()" for this method because it is being used to
+  extend an environment with a new entry.
+
+- The code should now compile.  Of course, it won't handle
+  by reference parameters correctly yet, but it should let
+  us run all the preceding examples just fine.
+
+------------------------------------------------------------------------
+5) To finish off the implementation, we just need to explain what
+should happen when we extend the environment for a ByRef parameter.
+In particular, we're going to want to add something like the previous
+definition of extend() to the ByRef class, but it will need to return
+a new RefEnv instead of a new ValEnv.  And that in turn, will require
+us to do something with the second argument in the call, because
+"expr.eval(env)" returns a *Value*, but the constructor for RefEnv
+requires an Env in that position.
+
+The trick that we need here is to define a new version of eval()
+that returns a reference instead of a value ...
+
+- The code for evaluating a Variable to produce a value just
+  looks for the variable name in the environment, and then
+  extracts the associate value using getValue():  (This definition
+  should already be in your version of Src.java; you don't need to
+  add it!)
+
+  Value eval(Program prog, Env env) {
+    return Env.lookup(env, name).getValue();
+  }
+
+  If we want to return a reference instead, just drop the getValue()
+  call from the end: (Note that I've used a different name for this
+  method, which should be added to the Var class.)
+
+  Env evalRef(Env env) {
+    // Return a reference to this variable:
+    return Env.lookup(env, name);
+  }
+
+- That last step only lets us find a reference when the expression
+  we're interested in is a variable.  What if the parameter that is
+  passed in is actually a different kind of expression.  For example,
+  how can we pass a reference to an expression like "6*7"?  The
+  answer is that we can evalue the expression as normal, save the
+  result in a new ValEnv entry, and then just return that as our
+  reference.  To capture this, add something like the following to
+  the code in Expr:
+
+  Env evalRef(Env env) {
+    // Store the expression in a new ValEnv and return
+    // that as the reference:
+    return new ValEnv("", eval(env), null);
+  }
+
+  The variable name doesn't matter in this case (nobody will ever
+  use it), which is why I've chosen "" here.  Note that this
+  definition will now be used for all expressions, except variables,
+  so we don't have to add any further implementations of evalRef().
+
+- Now, at last, we can add an appropriate definition for extend in
+ the ByRef class.  Evaluate the expression to produce a reference
+ (i.e., using evalRef()) and then wrap the result up as a RefEnv
+ (i.e., using new RefEnv()):
+
+    Env extend(Env env, Expr expr, Env newenv) {
+      return new RefEnv(name, expr.evalRef(env), newenv);
+    }
+
+------------------------------------------------------------------------
+6) Pause for breath!  Everything should compile now, and work as
+expected.  If you like, you can now modify some of your Main programs
+to include definitions that take by-reference parameters.  Or you
+can use one of ours instead:
+
+   cp ../extras/MainRef.java .
+   javac *.java
+   java MainRef
+
+Does this give the results you expect?  The answer should be yes
+(the program should output two numbers, 50 and 26) but you may need
+to trace the program quite carefully to confirm that this is indeed
+the correct result.  (And if you're seeing different results, then
+retrace your steps to make sure you didn't leave something out ...)
+
+------------------------------------------------------------------------
+7) Everybody smile, it's time for another snapshot!
+
+   mkdir Ref
+   cp *.java Ref
+
+
+========================================================================
+FCF: One last variant.  We're going to extend our interpreter with
+support for "first-class functions", which is a feature you might
+typically associate with functional languages, although it also
+becoming quite popular in other languages too.  The idea here is that
+we can create function values that can then be assigned to variables
+and passed as arguments to functions or procedures.  When we write
+these things down in a concrete syntax, we'll use the notation
+"\x -> expr" for a function (sometimes called a "lambda expression")
+that takes an argument x and returns the value of the specified expr,
+and we'll write "f @ x" for the result obtained by calling the function
+f with parameter value x.  That said, in our code, we'll only be
+worrying about abstract syntax, and we'll use class names Lambda and
+Apply.
+
+Although this is a fairly advanced language feature, it is actually
+one of the simplest to implement given the machinery we have already
+developed above!
+
+------------------------------------------------------------------------
+1) Practice good hygiene and clean up before we begin:
+
+   rm *.class
+
+------------------------------------------------------------------------
+2) Let's add a representation for function values as a new subclass of
+the Value class.  Every function value captures: the environment in which
+the function value was created (so that we can refer to its free variables);
+the name of the argument, and the expression that makes up the body of
+the function:
+
+  class FValue extends Value {
+    private Env    env;
+    private String arg;
+    private Expr   body;
+
+    FValue(Env env, String arg, Expr body) {
+      this.env = env; this.arg = arg; this.body = body;
+    }
+
+    Value enter(Value val) {
+      return body.eval(new ValEnv(arg, val, env));
+    }
+
+    String show() {
+      return "<function>";
+    }
+  }
+
+(As an aside, function values like this are often called "closures".)
+
+Note that we've included a method called "enter()" to describe the
+result of invoking the function with a specific argument, "val".
+(Again, we pick this name because this process is often referred
+to as "entering a closure".)  It is fairly easy to see how the
+function is evaluated.  First, we extend the environment with a
+new binding that associates the parameter name, arg, with the
+actual value passed in, val.  And then we just evaluate the body
+of the function using that extended environment.
+
+Everything should still compile once you've made the change above.
+
+------------------------------------------------------------------------
+3) It doesn't make sense to enter values that are not functions,
+so let's add a version of the "enter()" method in the Value class
+so that this will be treated as a (run-time) error:
+
+  Value enter(Value val) {
+    System.out.println("ABORT: First-class function expected");
+    System.exit(1);
+    return null;   // Not reached
+  }
+
+Once again, everything should still compile after this change.
+
+------------------------------------------------------------------------
+4) Now let's add an abstract syntax representation for lambda
+expressions.  It's surprisingly simple:
+
+class Lambda extends Expr {
+  private String var;
+  private Expr   body;
+  Lambda(String var, Expr body) { this.var = var; this.body = body; }
+
+  Value  eval(Env env) {
+    return new FValue(env, var, body);
+  }
+
+  String show() { return "(\\" + var + " -> " + body.show() + ")"; }
+}
+
+And we still haven't done anything that will stop this from compiling,
+so perhaps you should just check that now ...
+
+------------------------------------------------------------------------
+5) Function application isn't much harder either.  To evaluate an
+expression of the form f @ x, we're just going to need to evaluate
+f, which should produce an FValue that we can enter using the value
+of x as the argument.
+
+class Apply extends Expr {
+  private Expr fun, arg;
+  Apply(Expr fun, Expr arg) { this.fun = fun; this.arg = arg; }
+
+  Value  eval(Env env) {
+    return fun.eval(env).enter(arg.eval(env));
+  }
+
+  String show() { return "(" + fun.show() + " @ " + arg.show() + ")"; }
+}
+
+Still, everything should compile!
+
+------------------------------------------------------------------------
+6) Time for some testing.  As before, you can write your own, or use
+ours as a starting point.
+
+   cp ../extras/MainFCF.java .
+   javac *.java
+   java MainFCF
+
+We've sailed through this set of extensions fairly quickly, so be
+sure you understand how this works.
+
+------------------------------------------------------------------------
+7) One last snapshot, and then we can call it a day!
+
+   mkdir FCF
+   cp *.java FCF
+   rm *.class
+
+
+   Hope you had fun and enjoyed your interpretour!
+
+------------------------------------------------------------------------
