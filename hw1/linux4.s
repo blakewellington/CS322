@@ -36,18 +36,15 @@ f:
 	movl	%eax, %ebx	# number of pixels of both images in %ebx
 
 	movl	$0, %r8d	# Initialize the index counter
-	movl	$1, %eax	# Set return value to 1 
+	movl	$42, %eax	# Set return value to 42 
 	jmp	test
 
 loop:
 	incl	%r8d		# increment the counter
 	addq	$4, %rdi
 	addq	$4, %rsi
-	movl    (%rsi), %r9d    # load a pixel from memory
-#	movl	(%rsi), %edi	# Overwrite the pixel of IMG1 with IMG2
-bp:
-#	movl	%esi, (%edi)	# Overwrite the pixel of IMG1 with IMG2
-	movl	%r9d, (%edi)	# Overwrite the pixel of IMG1 with IMG2
+	movl	$42, (%rdi)	# Write a '*' (ASCII 42) to this mem loc IMG1
+	movl	$42, (%rsi)	# Write a '*' (ASCII 42) to this mem loc IMG2
 
 test:
 	cmpl	%ebx, %r8d	# Test for more pixels to change

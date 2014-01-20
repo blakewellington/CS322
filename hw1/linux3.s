@@ -18,12 +18,6 @@ f:
 # 
 # Return 1 and rotate image 1 180 degrees.
 #
-# Loop through the image, one row at a time
-# In an image with n rows:
-#    Read row 1 into the stack
-#    Copy row n into the memory locations of row 1
-#    Pop the pixels from the stack into row n (in reverse order)
-#    Repeat for row 2 and n-1
 ########################################################################
 
         movl    (%edi), %ebx    # put the width into %ebx
