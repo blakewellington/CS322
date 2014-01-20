@@ -61,37 +61,16 @@ f:
 loop:
 	incl	%r8d		# increment the index loop variable
 	addq	$4, %rdi	# move to the next pixel
+	movl	(%rdi), %edx	# load a pixel from memory
+	cmpl	$32, %edx	# Test for a space (ASCII 32)
+	jne	loop		# repeat if we're not done
+	incl	%r9d		# Else increment the space count
 
 test:
-	movl	(%rdi), %ecx	# load a pixel from memory
-	cmpl	$32, %ecx	# Test for a space (ASCII 32)
-	jne	loop		# If pixel is not a space, go to the next one
-	incl	%r9d		# Else increment the space count
-	cmpl	$200, %r8d	# Test for end of array
-	jne	loop		# repeat if we're not done
+	cmpl	%ecx, %r8d	# Test for end of array
+	jl	loop		# If pixel is not a space, go to the next one
 
-
-
-
-
-#        movl    $0, %eax        # initialize length count in eax
-#        jmp     test
-#loop:   incl    %eax            # increment count
-#        addq    $4, %rdi        # and move to next array element
-#
-#test:   movl    (%rdi), %ecx    # load array element
-#        cmpl    $0, %ecx        # test for end of array
-#        jne     loop            # repeat if we're not done ...
-
-#top:
-# count %edx
-#	cmpl	%edx, %ecx	# Compare count to the number of pixels
-#	je	done		# If count == pixels, jump to done
-#	incl	%edx		# increment count
-#	jmp top			# loop
-
-#done:
-
+	movl %r9d, %eax		# Put the number of spaces into the %eax for return
 	
 ### This is where your code ends ...
 
