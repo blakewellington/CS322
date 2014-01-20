@@ -45,15 +45,19 @@ f:
         mull    %ecx            # multiply h x w and store in %eax
 
 # Store the second result
-        movl    %eax, %ecx      # First area is stored in %ebx
+        movl    %eax, %ecx      # Second area is stored in %r15d
 
 # Then add them together
-        addl    %ecx, %ebx      # Add the two areas together
+        addl    %ebx, %eax      # Add the two areas together
         movl    %ebx, %eax      # move the result to %eax for use in the return
+break:
+# At this point,
+#	%ebx contains the number of pixels in image 1
+# 	%ecx contains the number of pixels in image 2
 
 ########################################################################
-
 # Now, loop through the pixels looking for spaces (ASCII 32)
+# Image #1
 	movl	$0, %r8d	# Initialize the index loop variable (%r8d)
 	movl	$0, %r9d	# Initialize the count of spaces (%r9d)
 	jmp	test		# Jump to the test section
@@ -63,14 +67,32 @@ loop:
 	addq	$4, %rdi	# move to the next pixel
 	movl	(%rdi), %edx	# load a pixel from memory
 	cmpl	$32, %edx	# Test for a space (ASCII 32)
-	jne	loop		# repeat if we're not done
+	jne	test		# repeat if we're not done
 	incl	%r9d		# Else increment the space count
 
 test:
-	cmpl	%ecx, %r8d	# Test for end of array
+	cmpl	%ebx, %r8d	# Test for end of array
 	jl	loop		# If pixel is not a space, go to the next one
-
 	movl %r9d, %eax		# Put the number of spaces into the %eax for return
+	
+# Image #2
+	movl	$0, %r8d	# Initialize the index loop variable (%r8d)
+	movl	$0, %r9d	# Initialize the count of spaces (%r9d)
+	jmp	test2		# Jump to the test section
+
+loop2:
+	incl	%r8d		# increment the index loop variable
+	addq	$4, %rsi	# move to the next pixel
+	movl	(%rsi), %edx	# load a pixel from memory
+	cmpl	$32, %edx	# Test for a space (ASCII 32)
+	jne	test2		# repeat if we're not done
+	incl	%r9d		# Else increment the space count
+
+test2:
+	cmpl	%ecx, %r8d	# Test for end of array
+	jl	loop2		# If pixel is not a space, go to the next one
+
+	addl %eax, %r9d
 	
 ### This is where your code ends ...
 
