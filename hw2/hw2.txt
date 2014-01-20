@@ -1,0 +1,274 @@
+S322 Languages and Compiler Design II                        Homework 2
+------------------------------------------------------------------------
+
+This homework is intended to give you some more practice in working with
+and extending the interpreters for the simple imperative language that
+was developed during the Week 2 lecture and lab sessions.  Specifically,
+the following exercises ask you to make some changes to the interpreters
+from the Is subdirectory (making direct use of abstract syntax trees)
+and from the B subdirectory (making use of a simple "bytecode").  You'll
+find these two subdirectories in the Week 2 lecture source code and also
+in the materials for the "interpretour", Week 2 lab session.  (The same
+source files appear in both places.)
+
+This assignment assumes that you have taken the "interpretour" lab, but it
+does not require any use of the DT, Nest, Proc, Ref, or FCF extensions, so
+you don't need to worry if you were not able to complete all of those
+during the lab time.
+
+This assignment is due at noon on Tuesday, January 28.  It should be
+submitted via the D2L dropbox as a single written document, in either text
+or pdf format.  (Please do not use either Microsoft Office or OpenOffice
+formats.)  The document should explain your solutions to each of the
+following questions, and include evidence of testing to demonstrate that
+your solutions work correctly.
+
+This assignment will be graded out of 60 points following the
+distribution described below.  The minimum passing grade for this
+assignment (i.e., to avoid an F or an X grade) is 15 points.
+
+If you get stuck and need further help or clarification, then please ask
+(on the D2L discussions, during office hours, in class, or in person, ...)
+
+
+
+Question 1: From assignment statements to assignment expressions [20 points]
+----------------------------------------------------------------
+In the abstract syntax for the Is interpreter, assignments are
+represented as a particular form of program statement (i.e., as
+instances of the Assign class, which is an extension of the Stmt
+class).  In programming languages like C, C++, and Java, however,
+assignments are treated instead as a kind of expression.  This
+question will guide you through the process of modifying the Is and B
+interpreters so that they also treat assignments as expressions.  But
+the instructions here do not contain all of the details for this, so
+you will have to work out some parts for yourself, and document those
+fully in the solution that you submit.
+
+a) Your goal in this part of the question is to modify the Is
+interpreter so that assignments are treated as expressions rather than
+statements.  With this change, an assignment of the form lhs = rhs
+will be treated as an expression that produces the value of the rhs
+expression as its result, combined with the side effect of saving that
+value in the specified lhs variable.  The main steps that you will need
+to follow here are:
+
+- Change the Assign class so that it "extends Expr" instead of "Stmt".
+
+- Replace the exec() and print() methods of the Assign class with
+  suitable eval() and show() methods, respectively.
+
+Once you've made these changes, however, you won't be able to use
+assignment expressions as statements, which would be pretty inconvenient
+in practice.  To work around this, languages like C and Java allow
+certain kinds of expression to be treated as statements.  We can handle
+this by adding a new form of abstract syntax like the following:
+
+  class ExprStmt extends Stmt {
+    private Assign expr;
+    ExprStmt(Assign expr) {
+      this.expr = expr;
+    }
+
+    void exec(Memory mem) {
+      // fill this in ...
+    }
+
+    void print(int ind) {
+      // fill this in ...
+    }
+  }
+
+Add this class to your implementation, and fill in the gaps shown to
+complete the definition.  Once you've done this, you should rewrite
+every assignment statement of the form  new Assign(lhs, rhs)  in
+Main.java to something like  new ExprStmt(new Assign(lhs, rhs))  so
+that the interpreter will compile and allow you to run the test
+program.  (Do not worry if the changes that you make cause the pretty
+printed code that is displayed to include more pairs of parentheses
+than are strictly necessary!)
+
+b) Now we're going to switch over to the B interpreter.  Before you
+make the corresponding edits to change assignments from statements
+to expressions, however, it will be useful to add two new instructions
+to our bytecode language.  Specifically, explain how you can add the
+following two new instructions, each of which is represented by a
+single opcode without any arguments:
+
+- DROP removes/discards the top value on the stack; and
+
+- DUP duplicates the top value on the stack.
+
+For example, if we had a stack containing the three numbers 4, 5, and 7,
+the last number being on the top of the stack, then:
+
+- executing a DROP instruction would leave a stack containing just
+  two elements, 4 and 5, with the 5 on the top; or, alternatively,
+
+- executing a DUP instruction would result in a four element stack
+  containing the numbers 4, 5, 7, and 7 with two number 7 values on
+  the top.
+
+c) Explain how the changes that you made to the Is interpreter in Part
+(a) can be carried over to the B interpreter.  Most of the code that
+you wrote for your answer to Part (a) will carry over directly here.
+But you will need to write new implementations for the bcgen() method
+in each of the Assign and ExprStmt classes, and you will probably find
+that the DROP and DUP instructions from Part (b) are needed to get
+this working correctly.  [Hint: Remember that the bytecode we generate
+for an expression is expected to end with the final value of the
+expression pushed on to the top of the stack.  On the other hand, the
+bytecode that we generate for a statement should start and end with
+the stack in exactly the same condition, and not with any extra
+elements either added or removed.]
+
+d) Include some evidence of testing to demonstrate that the changes
+you have made in Parts (a)-(c) above are working correctly.  Comment
+briefly on any opportunities that you see for optimization of the
+generated bytecode resulting from Part (c).
+
+
+Question 2: "For" the love of loops! [20 points]
+------------------------------------
+In this question, you'll extend the versions of the Is and B interpreters
+that you built in Question 1 to support C/C++/Java-style for loops.  As a
+reminder, for loops in these languages are typically written in the form:
+
+  for (init; test; step) body
+
+where "init" can perform some initialization action; "test" is a boolean
+test that determines whether the loop "body" should be executed; and
+"step" can be used to perform some action after each loop iteration and
+before moving on to the next test.  One of the things that makes this
+syntax very flexible is that any combination of "init", "test", and "step"
+can be omitted.  For example, if all three components are left out, then
+we get a for loop like the following that describes an infinite loop:
+
+  for (;;) body
+
+As another example, if we omit the "init" and the "step", then we get a
+for loop:
+
+  for (; test;) body
+
+that behaves just like the following while loop:
+
+  while (test) body
+
+For the Is and B interpreters, we'll use versions of the following
+class to provide an appropriate abstract syntax for these loops:
+
+  class For extends Stmt {
+    private Assign init;   // Note: this could be null
+    private BExpr  test;   // Note: this could be null
+    private Assign step;   // Note: this could be null
+    private Stmt   body;
+    For(Assign init, BExpr test, Assign step, Stmt body) {
+      this.init = init; this.test = test; this.step = step; this.body = body;
+    }
+    // Fill in the missing method definitions here ...
+  }
+
+The complication here, as the comments to the right of the
+definitions for "init", "test", and "step" indicate, is that you
+MUST allow for the possibility that any or all of these fields
+could be null.  For example, it should be possible to construct an
+abstract syntax fragment representing an infinite loop using an
+expression of the form  new For(null, null, null, body) without
+the interpreter reporting any Null Pointer Exceptions.
+
+a) Your first task is to add support for "for" loops to your extended
+version of the Is interpreter from Question 1.  In specific terms,
+this will require you to add the above definition for the For class to
+your code, and then to provide appropriate implementations for the
+required print() and exec() methods.
+
+b) Your second task is to add support for "for" loops to your extended
+version of the B interpreter from Question 1.  You should be able to
+use the "For" class that you developed in your answer to Part (a) as a
+starting point, and then just add an implementation of the bcgen()
+method that is used to generate bytecode.
+
+c) Finally, you should provide some evidence of testing to show that
+your solutions to Parts (a) and (b) work as expected, even when some
+or all of the "init", "test", or "step" components are replaced with
+nulls.
+
+
+Question 3: Instrumentation and debugging [20 points]
+-----------------------------------------
+Up to this point, we've focussed on extending our interpreters to add
+support for new language features.  But it is also possible to extend
+interpreters in ways that add new features, not to the language
+itself, but to the "development environment".  In this last question,
+we'll explore two simple examples of that.
+
+a) An interpreter can be "instrumented" to collect information or
+statistics about the behavior of the programs that it executes.  To
+illustrate this, show how the Is interpreter can be modified to count
+the total number of memory loads, stores, and loads from uninitialized
+variables when a program runs, and to display the final results when
+the program terminates.  The following shows a fragment of the output
+that is produced by one test run that uses this kind of instrumentation:
+
+  ...
+  Running on an empty memory:
+  Output: 55
+  Total number of:
+  - memory loads = 46
+  - memory stores = 24
+  - loads from uninitialized variables = 0
+  Done!
+  ...
+
+(Of course, as part of your solution, it would be a good idea to
+check, at least briefly, that the numbers that are displayed by these
+outputs are indeed consistent with what happens when the program
+executes ...)
+
+b) An interpreter can also be used to monitor information about the
+execution of a program this could be useful during a debugging process.
+One example of this is a facility that allows a programmer to specify
+a Boolean "watch expression" that the interpreter will evaluate every
+time we assign to any variable, triggering a diagnostic error message
+the first time that the watch expression becomes true.  In the context
+of the Is interpreter, we can implement this by specifying a watch
+expression as an argument of the constructor for the Memory class:
+
+  class Memory {
+    BExpr watch;
+    Memory(BExpr watch) {
+      this.watch = watch;
+    }
+    // ... other parts of the code not shown here
+  }
+
+For example, if we want to find out when the value of the variable i
+becomes less than the value of the variable t for the first time, then
+we might construct an initial memory for our program using:
+
+  Memory mem = new Memory(new LT(new Var("i"), new Var("t")));
+
+Explain how we can complete a simple implementation of the watch
+expression functionality described here for the Is interpreter (or one
+of the modified versions of Is that you produced in your answers to
+Questions 1 or 2).  As further guidance, the following fragment shows
+one example of the output that might be produced when a watch
+expression is triggered:
+
+  ...
+  Running on an empty memory:
+  Condition triggered while assigning 3 to t
+  Output: 55
+  Done!
+
+c) Comment briefly on the challenges that you might expect to face in
+extending the bytecode interpreter in B to support the instrumentation
+and watch expression features described in Parts (a) and (b).
+
+d) Comment briefly on difficulties that might occur in the implementation
+of watch expressions once we have allowed assignments to be used in
+expressions, as in Question 1.
+
+
+------------------------------------------------------------------------

@@ -5,13 +5,10 @@ f:
 
 ### This is where your code begins ...
 ########################################################################
-#                   Program 4
 # 
-# Program 4: If the two input images have the same width and height,
-#            then the result should be the integer 42 and every
-#            "pixel" in both images should be replaced with the
-#            character "*".  (And again, in case you don't know, the
-#            numeric code for the * character is also 42!)
+# Program 5: If the two input images have the same width and height,
+#            then the result should be 1 and the first image should
+#            be overwritten with a copy of the second image.
 #
 ########################################################################
 
