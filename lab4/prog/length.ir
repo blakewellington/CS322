@@ -1,0 +1,66 @@
+# Return input array a's length
+#
+_length (a:P):I
+{
+
+# ... to be filled ...
+
+
+}
+
+# Print array a
+#
+_printArray (a:P)
+(i:I, val:I)
+{
+  i = 0
+  val = [a]:I
+ L0:
+  if val == 0 goto L1
+  call _print(val)
+  i = i + 1
+  t1 = i * 4
+  t2 = a + t1
+  val = [t2]:I
+  goto L0
+ L1:
+  return 
+}
+
+# Main
+#
+_main ()
+(a:P)
+{
+  a = call _malloc(48)
+  t1 = a
+  [t1]:I = 5
+  t2 = t1 + 4
+  [t2]:I = 3
+  t3 = t2 + 4
+  [t3]:I = 6
+  t4 = t3 + 4
+  [t4]:I = 8
+  t5 = t4 + 4
+  [t5]:I = 2
+  t6 = t5 + 4
+  [t6]:I = 10
+  t7 = t6 + 4
+  [t7]:I = 11
+  t8 = t7 + 4
+  [t8]:I = 9
+  t9 = t8 + 4
+  [t9]:I = 1
+  t10 = t9 + 4
+  [t10]:I = 4
+  t11= t10 + 4
+  [t11]:I = 7
+  t12 = t11 + 4
+  [t12]:I = 0
+  call _print("Input:")
+  call _printArray(a)
+  t13 = call _length(a)
+  call _print("Length of array is:")
+  call _print(t13)
+  return 
+}

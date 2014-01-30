@@ -1,0 +1,35 @@
+# Input: an integer array and its size
+# Output: the sum of the array's elements
+#
+_sum (a:P, n:I):I	 # function name, parameters, and return type
+(sum:I, i:I)             # local variables                           
+{
+  sum = 0                # result of sum
+  i = 0                  # loop idx
+ L0:
+  if i >= n goto L1
+  t1 = i * 4
+  t2 = a + t1            # addr of a[i]
+  t3 = [t2]:I            # fetch a[i]
+  sum = sum + t3
+  i = i + 1
+  goto L0
+ L1:
+  return sum
+}
+
+_main ()
+(a:P, s:I)
+{
+  a = call _malloc(12)   # alloc space for three integers
+  t1 = a                 # initialize array elements
+  [t1]:I = 1
+  t2 = a + 4
+  [t2]:I = 2
+  t3 = 2 * 4
+  t4 = a + t3
+  [t4]:I = 3
+  s = call _sum(a, 3)    # call sum function
+  call _printInt(s)      # print result
+  return 
+}
