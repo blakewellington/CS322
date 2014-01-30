@@ -166,30 +166,7 @@ class IR0Gen {
   static ValPack gen(Ast0.Binop n) throws Exception {
 
     // ... need code ...
-    List<IR0.Inst> code = new ArrayList<IR0.Inst>();
-    ValPack p1 = gen(n.e1);
-    ValPack p2 = gen(n.e2);
-    code.addAll(p1.code);
-    code.addAll(p2.code);
-    IR0.Temp t = new IR0.Temp();
-    
-    if (isRelOp(n.op)) {
-    // For RelOp
-    IR0.Label lab = new IR0.Label();
-    IR0.RelOP op = (IR0.RelOP) gen(n.op);
-
-    code.add(new IR0.Move(t, new IR0.BoolLit(true)));
-    code.add(new IR0.CJump(t, new IR0.BoolLit(true)));
-    code.add(new IR0.Move(t, new IR0.BoolLit(false)));
-    code.add(new IR0.LabelDec(lab));
-
-    
-    } else {
-    // For ArithOp
-    IR0.ArithOP op = (IR0.ArithOP) gen(n.op);
-    code.add(new IR0.Binop(op, p1.src, p2.src));
-    }
-    return new ValPack(t, code);
+    return null;
 
   }
 
@@ -208,6 +185,10 @@ class IR0Gen {
     IR0.Inst s = new IR0.Unop(op, t, p.src);
     p.code.add(s);
     return new ValPack(t, p.code);
+
+    // ... need code ...
+
+    return null;
   }
   
   // Ast0.NewArray ---

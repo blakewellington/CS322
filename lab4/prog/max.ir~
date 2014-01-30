@@ -2,22 +2,8 @@
 #
 _max (a:P):I
 {
-  max = [a]		# Current max equal the first element
-  i = 1			# Loop index
 
-L2:
-  t1 = i * 4              # compute addr of a[i]
-  t2 = a + t1             #
-  t3 = [t2]:I             # fetch a[i]
-
-L0:
-  if t3 == 0 goto L1      # reached the end of array?
-  if t3 >= max goto L2
-  len = len + 1          # add a[i] to sum
-  i = i + 1
-  goto L0
-L1:
-  return len
+# ... to be filled ...
 
 
 }

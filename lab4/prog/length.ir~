@@ -1,25 +1,21 @@
-# Return input array a's largest element
+# Return input array a's length
 #
-_max (a:P):I
+_length (a:P):I
 {
-  max = [a]		# Current max equal the first element
-  i = 1			# Loop index
 
-L2:
+  len = 0                 # accumulated len
+  i = 0			  # Loop index
+L0:
   t1 = i * 4              # compute addr of a[i]
   t2 = a + t1             #
   t3 = [t2]:I             # fetch a[i]
-
-L0:
   if t3 == 0 goto L1      # reached the end of array?
-  if t3 >= max goto L2
+  t3 = [t2]:I             # fetch a[i]
   len = len + 1          # add a[i] to sum
   i = i + 1
   goto L0
 L1:
   return len
-
-
 }
 
 # Print array a
@@ -73,8 +69,8 @@ _main ()
   [t12]:I = 0
   call _print("Input:")
   call _printArray(a)
-  t13 = call _max(a)
-  call _print("Max element of array is:")
+  t13 = call _length(a)
+  call _print("Length of array is:")
   call _print(t13)
   return 
 }
