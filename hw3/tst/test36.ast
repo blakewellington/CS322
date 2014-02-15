@@ -1,0 +1,11 @@
+# AST Program
+
+  Func void main ()
+   VarDecl IntType i ()
+   Assign i (Call foo ())
+   Print i
+
+  Func IntType foo ()
+   VarDecl IntType x ()
+   Assign x 1
+   Return x

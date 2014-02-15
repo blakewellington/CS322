@@ -1,0 +1,11 @@
+#!/bin/sh
+for i
+do
+	d=`dirname $i`
+	f=`basename $i .ast`
+	echo $d/$f:
+	java SC0Gen $d/$f.ast 1> $d/$f.sc
+	if [ -r $d/$f.sc.ref ]; then diff -w $d/$f.sc $d/$f.sc.ref; fi
+done
+exit 0
+

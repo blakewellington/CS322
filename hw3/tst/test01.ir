@@ -1,0 +1,8 @@
+# IR1 Program
+
+_main ()
+{
+ call _print("123")
+ call _print(123)
+ call _print(true)
+}

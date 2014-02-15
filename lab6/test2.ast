@@ -1,0 +1,4 @@
+If (Binop || (Binop > a 0) (Binop > b 0))
+ Assign x 1 
+Else
+ Assign x 2 

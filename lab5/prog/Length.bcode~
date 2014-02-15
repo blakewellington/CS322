@@ -1,0 +1,52 @@
+Compiled from "Length.java"
+class Length {
+  Length();
+    Code:
+       0: aload_0       
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: return        
+
+  public static void main(java.lang.String[]);
+    Code:
+// int[] a = new int[4];
+       0: iconst_4      
+       1: newarray       int
+       3: astore_1      
+
+       4: aload_1       
+       5: iconst_0      
+       6: iconst_5      
+       7: iastore       
+
+       8: aload_1       
+       9: iconst_1      
+      10: iconst_3      
+      11: iastore       
+
+      12: aload_1       
+      13: iconst_2      
+      14: bipush        6
+      16: iastore       
+
+      17: aload_1       
+      18: iconst_3      
+      19: iconst_0      
+      20: iastore       
+
+      21: iconst_0      
+      22: istore_2      
+
+      23: aload_1       
+      24: iload_2       
+      25: iaload        
+      26: ifeq          36
+      29: iload_2       
+      30: iconst_1      
+      31: iadd          
+      32: istore_2      
+      33: goto          23
+      36: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+      39: iload_2       
+      40: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V
+      43: return        
+}

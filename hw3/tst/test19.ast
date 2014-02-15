@@ -1,0 +1,13 @@
+# AST Program
+
+  Func void main ()
+   Print (Call go ())
+
+  Func IntType go()
+   VarDecl BoolType b ()
+   VarDecl IntType i ()
+   VarDecl (ArrayType IntType) a (NewArray IntType 4)
+   Assign b (Binop || (Binop || (Binop < 1 2) (Binop && (Binop > 3 4) (Binop == 5 (Binop + 6 (Binop * 7 8))))) (Unop ! true))
+   Assign i (Binop + (Binop + (Binop - 8 7) 6) (Binop / (Binop * 5 4) 2))
+   Print  b
+   Return i

@@ -1,0 +1,32 @@
+# IR1 Program
+
+_main ()
+{
+ t1 = call _go()
+ call _print(t1)
+}
+
+_go ():I
+{
+ t2 = true
+ if 1 < 2 goto L1
+ t2 = false
+L1:
+ if t2 == false goto L0
+ call _print(1)
+ goto L2
+L0:
+ t3 = 3 * 4
+ t4 = true
+ if t3 == 10 goto L4
+ t4 = false
+L4:
+ if t4 == false goto L3
+ call _print(4)
+ goto L5
+L3:
+ call _print(5)
+L5:
+L2:
+ return 6
+}

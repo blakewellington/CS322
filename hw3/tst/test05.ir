@@ -1,0 +1,11 @@
+# IR1 Program
+
+_main ()
+{
+ call _go()
+}
+
+_go ()
+{
+ call _print("Go!")
+}

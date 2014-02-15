@@ -1,0 +1,18 @@
+# IR1 Program
+
+_main ()
+(i:I, j:I, k:I)
+{
+ i = 2
+ j = 3
+ t1 = i + j
+ k = t1
+ call _print(k)
+ t2 = true
+ if k == 5 goto L1
+ t2 = false
+L1:
+ if t2 == false goto L0
+ call _print("OK")
+L0:
+}

@@ -1,0 +1,14 @@
+# AST Program
+
+  Func void main ()
+   VarDecl IntType i (Call foo (2 ))
+   Print i
+
+  Func IntType foo ((Formal IntType i) )
+   If (Binop > i 1)
+    Return (Call bar ())
+   Else
+    Return 3
+
+  Func IntType bar ()
+   Return (Call foo (1 ))

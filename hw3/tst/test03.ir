@@ -1,0 +1,25 @@
+# IR1 Program
+
+_main ()
+(b:B, i:I)
+{
+ t1 = true
+ if 1 > 2 goto L0
+ t1 = false
+L0:
+ t2 = true
+ if 3 < 4 goto L1
+ t2 = false
+L1:
+ t3 = !false
+ t4 = t2 && t3
+ t5 = t1 || t4
+ b = t5
+ t6 = 2 * 4
+ t7 = 2 + t6
+ t8 = 9 / 3
+ t9 = t7 - t8
+ i = t9
+ call _print(b)
+ call _print(i)
+}

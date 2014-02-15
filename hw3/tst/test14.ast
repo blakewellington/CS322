@@ -1,0 +1,10 @@
+# AST Program
+
+  Func void main ()
+   Print (Call go ())
+
+  Func IntType back ((Formal IntType a) )
+   Return a
+
+  Func IntType go ()
+   Return (Call back (2 ))

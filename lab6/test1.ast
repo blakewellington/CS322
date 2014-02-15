@@ -1,0 +1,3 @@
+If (Binop > n 0) 
+ Assign x 1 
+

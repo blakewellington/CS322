@@ -1,0 +1,7 @@
+# AST Program
+
+  Func void main ()
+   CallStmt go ()
+
+  Func void go ()
+   Print "Go!"

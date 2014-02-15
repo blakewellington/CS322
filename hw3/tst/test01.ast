@@ -1,0 +1,6 @@
+# AST Program
+
+  Func void main ()
+   Print "123" 
+   Print 123 
+   Print true 

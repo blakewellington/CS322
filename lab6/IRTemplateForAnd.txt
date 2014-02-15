@@ -1,0 +1,11 @@
+// Template for "e1 && e2":
+// newTemp: t
+// newLabel: L
+// code:
+// "t = false"
+// + e1.c
+// + "if e1.v == false goto L"
+// + e2.c
+// + "if e2.v == false goto L"
+// + "t = true"
+// + "L:"

@@ -1,0 +1,101 @@
+# IR1 Program
+
+_main ()
+(numbers:P, cnt:I)
+{
+ t1 = call _malloc(40)
+ numbers = t1
+ cnt = 0
+L0:
+ t2 = true
+ if cnt < 10 goto L2
+ t2 = false
+L2:
+ if t2 == false goto L1
+ t3 = 10 - cnt
+ t4 = cnt * 4
+ t5 = numbers + t4
+ [t5] = t3
+ t6 = cnt + 1
+ cnt = t6
+ goto L0
+L1:
+ call _selectionSort(numbers, cnt)
+ call _print("Your numbers in sorted order are:")
+ cnt = 0
+L3:
+ t7 = true
+ if cnt < 10 goto L5
+ t7 = false
+L5:
+ if t7 == false goto L4
+ t8 = cnt * 4
+ t9 = numbers + t8
+ t10 = [t9]
+ call _print(t10)
+ t11 = cnt + 1
+ cnt = t11
+ goto L3
+L4:
+}
+
+_selectionSort (A:P, count:I)
+(temp:I, i:I, j:I, k:I)
+{
+ t12 = count - 1
+ i = t12
+L6:
+ t13 = true
+ if i >= 0 goto L8
+ t13 = false
+L8:
+ if t13 == false goto L7
+ j = 0
+ k = 0
+L9:
+ t14 = true
+ if j <= i goto L11
+ t14 = false
+L11:
+ if t14 == false goto L10
+ t15 = j * 4
+ t16 = A + t15
+ t17 = [t16]
+ t18 = k * 4
+ t19 = A + t18
+ t20 = [t19]
+ t21 = true
+ if t17 > t20 goto L13
+ t21 = false
+L13:
+ if t21 == false goto L12
+ k = j
+L12:
+ t22 = j + 1
+ j = t22
+ goto L9
+L10:
+ t23 = true
+ if k != i goto L15
+ t23 = false
+L15:
+ if t23 == false goto L14
+ t24 = k * 4
+ t25 = A + t24
+ t26 = [t25]
+ temp = t26
+ t27 = i * 4
+ t28 = A + t27
+ t29 = [t28]
+ t30 = k * 4
+ t31 = A + t30
+ [t31] = t29
+ t32 = i * 4
+ t33 = A + t32
+ [t33] = temp
+L14:
+ t34 = i - 1
+ i = t34
+ goto L6
+L7:
+}

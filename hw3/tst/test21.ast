@@ -1,0 +1,15 @@
+# AST Program
+
+  Func void main ()
+   VarDecl BoolType b ()
+   VarDecl IntType i ()
+   VarDecl IntType j ()
+   Assign b true
+   Assign i (Call foo (1 2 ))
+   Assign j (Binop * 2 3)
+   Print b
+   Print i
+   Print j
+
+  Func IntType foo ((Formal IntType i) (Formal IntType j) )
+   Return (Binop + i j)

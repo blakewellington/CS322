@@ -1,0 +1,30 @@
+# IR1 Program
+
+_main ()
+(i:I)
+{
+ t1 = call _foo(2)
+ i = t1
+ call _print(i)
+}
+
+_foo (i:I):I
+{
+ t2 = true
+ if i > 1 goto L1
+ t2 = false
+L1:
+ if t2 == false goto L0
+ t3 = call _bar()
+ return t3
+ goto L2
+L0:
+ return 3
+L2:
+}
+
+_bar ():I
+{
+ t4 = call _foo(1)
+ return t4
+}

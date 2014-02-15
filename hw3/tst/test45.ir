@@ -1,0 +1,12 @@
+# IR1 Program
+
+_main ()
+(i:I, j:I)
+{
+ t1 = 2 + 3
+ i = t1
+ t2 = 2 * 1
+ j = t2
+ t3 = i + j
+ call _print(t3)
+}

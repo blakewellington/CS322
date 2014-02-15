@@ -1,0 +1,10 @@
+# AST Program
+
+  Func void main ()
+   Print (Call go ())
+
+  Func IntType go ()
+   Return (Call value (1 2 3 ))
+
+  Func IntType value ((Formal IntType i) (Formal IntType j) (Formal IntType k) )
+   Return (Binop + (Binop + i j) k)

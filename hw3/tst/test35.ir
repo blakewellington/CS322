@@ -1,0 +1,15 @@
+# IR1 Program
+
+_main ()
+(i:I)
+{
+ t1 = call _foo(1, 2)
+ i = t1
+ call _print(i)
+}
+
+_foo (x:I, y:I):I
+{
+ t2 = x + y
+ return t2
+}

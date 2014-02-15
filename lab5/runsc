@@ -1,0 +1,11 @@
+#!/bin/sh
+for i
+do
+	d=`dirname $i`
+	f=`basename $i .sc`
+	echo $d/$f:
+	java -jar sc0int.jar $d/$f.sc > $d/$f.out
+	cat $d/$f.out
+done
+exit 0
+

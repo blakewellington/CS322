@@ -1,0 +1,106 @@
+Classfile /u/eblake/CS322/lab5/prog/Length.class
+  Last modified Feb 13, 2014; size 490 bytes
+  MD5 checksum bb48ab482270f87f96281b9e217d5122
+  Compiled from "Length.java"
+class Length
+  SourceFile: "Length.java"
+  minor version: 0
+  major version: 51
+  flags: ACC_SUPER
+Constant pool:
+   #1 = Methodref          #5.#16         //  java/lang/Object."<init>":()V
+   #2 = Fieldref           #17.#18        //  java/lang/System.out:Ljava/io/PrintStream;
+   #3 = Methodref          #19.#20        //  java/io/PrintStream.println:(I)V
+   #4 = Class              #21            //  Length
+   #5 = Class              #22            //  java/lang/Object
+   #6 = Utf8               <init>
+   #7 = Utf8               ()V
+   #8 = Utf8               Code
+   #9 = Utf8               LineNumberTable
+  #10 = Utf8               main
+  #11 = Utf8               ([Ljava/lang/String;)V
+  #12 = Utf8               StackMapTable
+  #13 = Class              #23            //  "[I"
+  #14 = Utf8               SourceFile
+  #15 = Utf8               Length.java
+  #16 = NameAndType        #6:#7          //  "<init>":()V
+  #17 = Class              #24            //  java/lang/System
+  #18 = NameAndType        #25:#26        //  out:Ljava/io/PrintStream;
+  #19 = Class              #27            //  java/io/PrintStream
+  #20 = NameAndType        #28:#29        //  println:(I)V
+  #21 = Utf8               Length
+  #22 = Utf8               java/lang/Object
+  #23 = Utf8               [I
+  #24 = Utf8               java/lang/System
+  #25 = Utf8               out
+  #26 = Utf8               Ljava/io/PrintStream;
+  #27 = Utf8               java/io/PrintStream
+  #28 = Utf8               println
+  #29 = Utf8               (I)V
+{
+  Length();
+    flags: 
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0       
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return        
+      LineNumberTable:
+        line 1: 0
+
+  public static void main(java.lang.String[]);
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=3, locals=3, args_size=1
+         0: iconst_4      
+         1: newarray       int
+         3: astore_1      
+         4: aload_1       
+         5: iconst_0      
+         6: iconst_5      
+         7: iastore       
+         8: aload_1       
+         9: iconst_1      
+        10: iconst_3      
+        11: iastore       
+        12: aload_1       
+        13: iconst_2      
+        14: bipush        6
+        16: iastore       
+        17: aload_1       
+        18: iconst_3      
+        19: iconst_0      
+        20: iastore       
+        21: iconst_0      
+        22: istore_2      
+        23: aload_1       
+        24: iload_2       
+        25: iaload        
+        26: ifeq          36
+        29: iload_2       
+        30: iconst_1      
+        31: iadd          
+        32: istore_2      
+        33: goto          23
+        36: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        39: iload_2       
+        40: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V
+        43: return        
+      LineNumberTable:
+        line 4: 0
+        line 5: 4
+        line 6: 8
+        line 7: 12
+        line 8: 17
+        line 11: 21
+        line 12: 23
+        line 13: 29
+        line 15: 36
+        line 16: 43
+      StackMapTable: number_of_entries = 2
+           frame_type = 253 /* append */
+             offset_delta = 23
+        locals = [ class "[I", int ]
+           frame_type = 12 /* same */
+
+}

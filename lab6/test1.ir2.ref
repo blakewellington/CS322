@@ -1,0 +1,4 @@
+# IR0 Program
+ if n <= 0 goto L0
+ x = 1
+L0:

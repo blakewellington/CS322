@@ -1,0 +1,27 @@
+# IR1 Program
+
+_main ()
+{
+ t1 = call _go()
+ call _print(t1)
+}
+
+_go ():I
+{
+ t2 = call _value(true)
+ return t2
+}
+
+_value (cond:B):I
+(i:I, j:I, k:I)
+{
+ i = 5
+ j = 6
+ if cond == false goto L0
+ k = i
+ goto L1
+L0:
+ k = j
+L1:
+ return k
+}
