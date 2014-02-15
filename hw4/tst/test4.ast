@@ -1,0 +1,8 @@
+# while statement
+
+Assign i 5
+While (Binop > i 0)
+{
+ Print i
+ Assign i (Binop - i 1)
+}

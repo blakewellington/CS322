@@ -1,0 +1,7 @@
+# if statement
+
+Assign flag false
+If flag Assign x 1
+Else Assign x 2
+Print x
+

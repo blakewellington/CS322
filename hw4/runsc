@@ -1,0 +1,11 @@
+#!/bin/sh
+for i
+do
+	d=`dirname $i`
+	f=`basename $i .sc`
+	echo $d/$f:
+	java -jar sc0int.jar $d/$f.sc | grep -v "#" 1> $d/$f.out
+	cat $d/$f.out
+	if [ -r $d/$f.out.ref ]; then diff -w $d/$f.out $d/$f.out.ref; fi
+done
+exit 0

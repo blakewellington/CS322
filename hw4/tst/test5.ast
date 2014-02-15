@@ -1,0 +1,8 @@
+# Arith expr
+#  x = 1 + 2 * 4 + 6 / 3
+#  y = x * x
+
+Assign x (Binop + (Binop + 1 (Binop * 2 4)) (Binop / 6 3))
+Assign y (Binop * x x)
+Print x
+Print y

@@ -1,0 +1,8 @@
+# Block of statements
+
+Assign i 5
+{
+ Print i
+ Assign i (Binop - i 1)
+}
+Print i

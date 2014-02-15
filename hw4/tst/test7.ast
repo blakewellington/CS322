@@ -1,0 +1,15 @@
+# Compute array sum 
+#  a = newarray[3];
+#  a[0] = 1;
+#  a[1] = -2;
+#  a[2] = 3 * 4;
+#  sum = a[0] + a[1] + a[2];
+#  print(sum);
+
+Assign a (NewArray 3) 
+Assign (ArrayElm a 0) 1
+Assign (ArrayElm a 1) (Unop - 2)
+Assign (ArrayElm a 2) (Binop * 3 4)
+Assign sum (Binop + (Binop + (ArrayElm a 0) (ArrayElm a 1)) (ArrayElm a 2))
+Print sum
+

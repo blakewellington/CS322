@@ -1,0 +1,14 @@
+# Boolean expr
+#  x = 3 > 1
+#  y = ! true
+#  if (x || y)
+#   print x
+#  else 
+#   print y
+
+Assign x (Binop > 3 1)
+Assign y (Unop ! true)
+If (Binop || x y)
+ Print x
+Else
+ Print y
