@@ -31,13 +31,13 @@ public interface ast0ParserConstants {
   /** RegularExpression Id. */
   int kwWhile = 15;
   /** RegularExpression Id. */
-  int BoolLit = 16;
+  int Digit = 16;
   /** RegularExpression Id. */
-  int Digit = 17;
+  int Letter = 17;
   /** RegularExpression Id. */
-  int Letter = 18;
+  int IntLit = 18;
   /** RegularExpression Id. */
-  int IntLit = 19;
+  int BoolLit = 19;
   /** RegularExpression Id. */
   int Id = 20;
 
@@ -62,11 +62,13 @@ public interface ast0ParserConstants {
     "\"Print\"",
     "\"Unop\"",
     "\"While\"",
-    "<BoolLit>",
     "<Digit>",
     "<Letter>",
     "<IntLit>",
+    "<BoolLit>",
     "<Id>",
+    "\"{\"",
+    "\"}\"",
     "\"(\"",
     "\")\"",
     "\"+\"",

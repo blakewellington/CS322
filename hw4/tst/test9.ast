@@ -1,0 +1,21 @@
+# if statement with blocks
+
+Assign flag false
+If flag 
+{
+ Assign x 1
+ Print flag
+}
+Else 
+{
+ Assign x 2
+ Print flag
+ Assign i 10
+ While (Binop > i 0)
+ {
+  Print i
+  Assign i (Binop - i 1)
+ }
+}
+Print x
+

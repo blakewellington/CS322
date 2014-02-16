@@ -1,6 +1,7 @@
 # Makefile for CS322 Lab5. (Jingke Li)
 #
 JFLAGS = -g
+JC = javac
 
 .SUFFIXES: .java .class
 

@@ -78,6 +78,8 @@ class SC0Gen {
   //
   static List<String> gen(Ast0.Assign n) throws Exception {
 	    List<String> code = new ArrayList<String>();
+    	String comment = "";
+
     if (n.lhs instanceof Ast0.Id) {
       String name = ((Ast0.Id) n.lhs).nm;
       int idx = vars.indexOf(name);
@@ -86,13 +88,15 @@ class SC0Gen {
         idx = vars.indexOf(name);
       }
       code = gen(n.rhs);
-      code.add("STORE " + idx);
+      comment = "\t# Pop the stack and store into " + name;
+      code.add("STORE " + idx + comment);
     } else if (n.lhs instanceof Ast0.ArrayElm) {
     // My Code BEGIN
     	code.addAll(gen(((Ast0.ArrayElm) n.lhs).ar));	// Push the array reference to the stack
     	code.addAll(gen(((Ast0.ArrayElm) n.lhs).idx));	// Push the array index to the stack
     	code.addAll(gen(n.rhs));						// Push the RHS value to the stack.
-	    code.add("ASTORE");
+    	comment = "\t# Pop the stack and store into the array in memory.";
+	    code.add("ASTORE" + comment);
     // My Code END
 
 	// ... need code ...
@@ -112,10 +116,12 @@ class SC0Gen {
     // My Code BEGIN
 	    	code.addAll(gen(n.cond));				// Boolean, either 1 or 0 (T or F)
 	    	// If FALSE, jump ahead the number of instructions of s1 + 2
-	    	code.add("IFZ " + ((gen(n.s1)).size() + 2));	
+	        String comment = "\t# Begin If block: If condition is false, skip over the body of If statement.";
+	        code.add("IFZ " + ((gen(n.s1)).size() + 2) + comment);	
 	    	code.addAll(gen(n.s1));
 	    	if (n.s2 != null) {
-	    		code.add("GOTO " + ((gen(n.s2)).size() + 1));
+	    		comment = "\t# If we land here, we need to skip over the else section";
+	    		code.add("GOTO " + ((gen(n.s2)).size() + 1) + comment);
 	    		code.addAll(gen(n.s2));
 	    	}
     // My Code END
@@ -132,9 +138,11 @@ class SC0Gen {
     // My Code BEGIN
     	code.addAll(gen(n.cond));				// Boolean, either 1 or 0 (T or F)
     	// If FALSE, jump ahead the number of instructions of s1 + 2
-    	code.add("IFZ " + ((gen(n.s)).size() + 2));	
+	    String comment = "\t# Begin while loop: If condition is false, skip over the body of the loop.";
+    	code.add("IFZ " + ((gen(n.s)).size() + 2) + comment);	
     	code.addAll(gen(n.s));
-    	code.add("GOTO -" + ((gen(n.s)).size() + 2));
+    	comment = "\t# Loop back to top of While loop and evaluate condition.";
+    	code.add("GOTO -" + ((gen(n.s)).size() + 1 + (gen(n.cond)).size()) + comment);
     // My Code END
     // ... need code ...
     return code;
@@ -147,7 +155,8 @@ class SC0Gen {
 	    List<String> code = new ArrayList<String>();
     // My Code BEGIN
 	code.addAll(gen(n.arg));
-    code.add("PRINT");
+	String comment = "\t# Pop the stack and print it.";
+    code.add("PRINT" + comment);
     // My Code END
 
     // ... need code ...
@@ -183,43 +192,23 @@ class SC0Gen {
     case DIV:  
     case AND:  
     case OR:   
-    	code.add(op);
+    	code.add(op + "\t\t# " + op + "val1 and val2");
     	break;
     case EQ:   
-    	code.add("IFNE 3");		// If not equal, jump over the next instructions
-    	code.add("CONST 1");	// Set return value to TRUE
-    	code.add("GOTO 2");
-    	code.add("CONST 0"); 	// Set return value to FALSE
-    	break;
     case NE:   
-    	code.add("IFEQ 3");		// If not equal, jump over the next instructions
-    	code.add("CONST 1");	// Set return value to TRUE
-    	code.add("GOTO 2");
-    	code.add("CONST 0"); 	// Set return value to FALSE
-    	break;
     case LT:   
-    	code.add("IFGE 3");		// If not LT, jump over the next instructions
-    	code.add("CONST 1");	// Set return value to TRUE
-    	code.add("GOTO 2");
-    	code.add("CONST 0"); 	// Set return value to FALSE
-    	break;
     case LE:   
-    	code.add("IFGT 3");		// If not LE, jump over the next instructions
-    	code.add("CONST 1");	// Set return value to TRUE
-    	code.add("GOTO 2");
-    	code.add("CONST 0"); 	// Set return value to FALSE
-    	break;
     case GT:   
-    	code.add("IFLE 3");		// If not GT, jump over the next instructions
-    	code.add("CONST 1");	// Set return value to TRUE
-    	code.add("GOTO 2");
-    	code.add("CONST 0"); 	// Set return value to FALSE
-    	break;
     case GE:   
-    	code.add("IFLT 2");		// If not GE, jump over the next instructions
-    	code.add("CONST 1");	// Set return value to TRUE
-    	code.add("GOTO 2");
-    	code.add("CONST 0"); 	// Set return value to FALSE
+    	String comment = "\t# If val1 " + n.op.name() + " val2 then skip ahead 3 spaces.";
+    	code.add(op + " 3" + comment);	// If not equal, jump over the next instructions
+    	comment = "\t# Otherwise put FALSE on the stack";
+    	code.add("CONST 0" + comment);	// Set return value to FALSE
+    	comment = "\t# ... and skip ahead 2 spaces";
+    	code.add("GOTO 2" + comment);
+    	comment = "\t# Put TRUE on the stack.";
+    	code.add("CONST 1" + comment); 	// Set return value to TRUE
+    	break;
     }
     return code;
   }
@@ -257,9 +246,11 @@ class SC0Gen {
   static List<String> gen(Ast0.NewArray n) throws Exception {
 	    List<String> code = new ArrayList<String>();
     // My Code BEGIN
+	    String comment = "\t# Building a new array: Load the size (" + n.sz + ") onto the stack.";
 
-	    code.add("CONST " + n.sz);
-	    code.add("NEWARRAY");
+	    code.add("CONST " + n.sz + comment);
+	    comment = "\t# Create the array in memory.";
+	    code.add("NEWARRAY" + comment);
     // My Code END
 
     // ... need code ...
@@ -275,7 +266,8 @@ class SC0Gen {
     // My Code BEGIN
 	    code.addAll(gen(n.ar));
 	    code.addAll(gen(n.idx));
-	    code.add("ALOAD");
+	    String comment = "\t# Load " + n.ar.toString() + " onto the stack.";
+	    code.add("ALOAD" + comment);
     // My Code END
 
     // ... need code ...
@@ -291,7 +283,8 @@ class SC0Gen {
     int idx = vars.indexOf(n.nm);
     if (idx < 0)
       throw new SC0GenException("Id is not defined: " + n.nm);
-    code.add("LOAD " + idx);
+    String comment = "\t# Load " + n.nm + " onto the stack.";
+    code.add("LOAD " + idx + comment);
     return code;
   }
 
@@ -300,7 +293,8 @@ class SC0Gen {
   //
   static List<String> gen(Ast0.IntLit n) throws Exception {
     List<String> code = new ArrayList<String>();
-    code.add("CONST " + n.i);
+    String comment = "\t# Put " + n.i + " on the stack.";
+    code.add("CONST " + n.i + comment);
     return code;
   }
 
@@ -309,7 +303,8 @@ class SC0Gen {
   //
   static List<String> gen(Ast0.BoolLit n) {
     List<String> code = new ArrayList<String>();
-    code.add("CONST " + (n.b ? 1 : 0));
+    String comment = "\t# Put " + (n.b ? "TRUE" : "FALSE") + " on the stack.";
+    code.add("CONST " + (n.b ? 1 : 0) + comment);
     return code;
   }
 

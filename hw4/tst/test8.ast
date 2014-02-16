@@ -1,8 +1,14 @@
-# Block of statements
+# while statement
 
 Assign i 5
+While (Binop > i 0)
 {
  Print i
  Assign i (Binop - i 1)
+ Assign j 10
+ While (Binop >= j 0)
+ {
+  Print j
+  Assign j (Binop - j 2)
+ }
 }
-Print i
