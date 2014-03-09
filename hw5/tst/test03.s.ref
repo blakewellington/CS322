@@ -1,0 +1,78 @@
+	.text
+    # _main ()
+    # (b, i)
+# Allocation map
+# t1	%rax
+# t2	%rcx
+# t3	%rdx
+# t4	%rsi
+# b	%rbx
+# t5	%rdi
+# t6	%r8
+# t7	%rbp
+# t8	%r9
+# t9	%r12
+# i	%r13
+	.p2align 4,0x90
+	.globl _main
+_main:
+	pushq %rbx
+	pushq %rbp
+	pushq %r12
+	pushq %r13
+	subq $8,%rsp
+    # 0.  Begin:
+F0_Begin:
+    # 1.   t1 = 1 > 2
+	movq $2,%r10
+	movq $1,%r11
+	cmpq %r10,%r11
+	setg %al
+    # 2.   t2 = 3 < 4
+	movq $4,%r10
+	movq $3,%r11
+	cmpq %r10,%r11
+	setl %cl
+    # 3.   t3 = !false
+	movq $0,%rdx
+	notq %rdx
+    # 4.   t4 = t2 && t3
+	movq %rcx,%rsi
+	andq %rdx,%rsi
+    # 5.   t5 = t1 || t4
+	movq %rax,%rdi
+	orq %rsi,%rdi
+    # 6.   b = t5
+	movq %rdi,%rbx
+    # 7.   t6 = 2 * 4
+	movq $2,%r8
+	imulq $4,%r8
+    # 8.   t7 = 2 + t6
+	movq $2,%rbp
+	addq %r8,%rbp
+    # 9.   t8 = 9 / 3
+	movq $3,%r10
+	movq $9,%rax
+	cqto
+	idivq %r10
+	movq %rax,%r9
+    # 10.  t9 = t7 - t8
+	movq %rbp,%r12
+	subq %r9,%r12
+    # 11.  i = t9
+	movq %r12,%r13
+    # 12.  call _printBool(b)
+	movq %rbx,%rdi
+	call _printBool
+    # 13.  call _printInt(i)
+	movq %r13,%rdi
+	call _printInt
+    # 14.  return 
+	addq $8,%rsp
+	popq %r13
+	popq %r12
+	popq %rbp
+	popq %rbx
+	ret
+    # 15. End:
+F0_End:

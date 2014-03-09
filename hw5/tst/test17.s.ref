@@ -1,0 +1,146 @@
+	.text
+	.globl _class_A
+_class_A:
+	.quad _A_go
+    # _main ()
+    # (a)
+# Allocation map
+# t1	%rbx
+# t2	%rax
+# t3	%rcx
+# t4	%rdi
+# a	%rdx
+	.p2align 4,0x90
+	.globl _main
+_main:
+	pushq %rbx
+    # 0.  Begin:
+F0_Begin:
+    # 1.   t1 = call _malloc(8)
+	movq $8,%rdi
+	call _malloc
+	movq %rax,%rbx
+    # 2.   [t1]:P = _class_A
+	leaq _class_A(%rip),%r10
+	movq %r10,(%rbx)
+    # 3.   call _init0_A(t1)
+	movq %rbx,%rdi
+	call _init0_A
+    # 4.   a = t1
+	movq %rbx,%rdx
+    # 5.   t2 = [a]:P
+	movq (%rdx),%rax
+    # 6.   t3 = [t2]:P
+	movq (%rax),%rcx
+    # 7.   t4 = call * t3(a)
+	movq %rdx,%rdi
+	call * %rcx
+	movq %rax,%rdi
+    # 8.   call _printInt(t4)
+	call _printInt
+    # 9.   return 
+	popq %rbx
+	ret
+    # 10. End:
+F0_End:
+    # _init0_A (obj)
+# Allocation map
+	.p2align 4,0x90
+	.globl _init0_A
+_init0_A:
+	subq $8,%rsp
+    # 0.  Begin:
+F1_Begin:
+    # 1.   return 
+	addq $8,%rsp
+	ret
+    # 2.  End:
+F1_End:
+    # _init_A (obj)
+# Allocation map
+	.p2align 4,0x90
+	.globl _init_A
+_init_A:
+	subq $8,%rsp
+    # 0.  Begin:
+F2_Begin:
+    # 1.   return 
+	addq $8,%rsp
+	ret
+    # 2.  End:
+F2_End:
+    # _A_go (obj)
+    # (b)
+# Allocation map
+# t1	%rax
+# t2	%rcx
+# t3	%rdx
+# b	%rbx
+# t4	%rsi
+# t5	%rdi
+# t6	%r8
+# t7	%r9
+# t8	%rbp
+# t9	%r12
+# t10	%r13
+# t11	%r14
+	.p2align 4,0x90
+	.globl _A_go
+_A_go:
+	pushq %rbx
+	pushq %rbp
+	pushq %r12
+	pushq %r13
+	pushq %r14
+    # 0.  Begin:
+F3_Begin:
+    # 1.   t1 = call _malloc(8)
+	movq $8,%rdi
+	call _malloc
+    # 2.   b = t1
+	movq %rax,%rbx
+    # 3.   t2 = 0 * 4
+	movq $0,%rcx
+	imulq $4,%rcx
+    # 4.   t3 = b + t2
+	movq %rbx,%rdx
+	addq %rcx,%rdx
+    # 5.   [t3]:I = 3
+	movl $3,(%rdx)
+    # 6.   t4 = 1 * 4
+	movq $1,%rsi
+	imulq $4,%rsi
+    # 7.   t5 = b + t4
+	movq %rbx,%rdi
+	addq %rsi,%rdi
+    # 8.   [t5]:I = 4
+	movl $4,(%rdi)
+    # 9.   t6 = 1 * 4
+	movq $1,%r8
+	imulq $4,%r8
+    # 10.  t7 = b + t6
+	movq %rbx,%r9
+	addq %r8,%r9
+    # 11.  t8 = [t7]:I
+	movslq (%r9),%rbp
+    # 12.  call _printInt(t8)
+	movq %rbp,%rdi
+	call _printInt
+    # 13.  t9 = 0 * 4
+	movq $0,%r12
+	imulq $4,%r12
+    # 14.  t10 = b + t9
+	movq %rbx,%r13
+	addq %r12,%r13
+    # 15.  t11 = [t10]:I
+	movslq (%r13),%r14
+    # 16.  return t11
+	movq %r14,%rax
+	popq %r14
+	popq %r13
+	popq %r12
+	popq %rbp
+	popq %rbx
+	ret
+    # 17. End:
+F3_End:

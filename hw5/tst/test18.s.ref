@@ -1,0 +1,160 @@
+	.text
+	.globl _class_A
+_class_A:
+	.quad _A_go
+    # _main ()
+    # (a)
+	.p2align 4,0x90
+	.globl _main
+_main:
+	pushq %rbx
+    # 0.  Begin:
+F0_Begin:
+    # 1.   t1 = call _malloc(16)
+	movq $16,%rdi
+	call _malloc
+    # 2.   [t1]:P = _class_A
+	leaq _class_A(%rip),%r10
+	movq %r10,(%rax)
+    # 3.   call _init0_A(t1)
+	movq %rax,%rdi
+	call _init0_A
+    # 4.   a = t1
+    # 5.   t2 = [a]:P
+	movq (%rax),%rbx
+    # 6.   t3 = [t2]:P
+	movq (%rbx),%rbx
+    # 7.   t4 = call * t3(a)
+	movq %rax,%rdi
+	call * %rbx
+    # 8.   call _printInt(t4)
+	movq %rax,%rdi
+	call _printInt
+    # 9.   return 
+	popq %rbx
+	ret
+    # 10. End:
+F0_End:
+    # _init0_A (obj)
+	.p2align 4,0x90
+	.globl _init0_A
+_init0_A:
+	subq $8,%rsp
+	movq %rdi,%rax
+    # 0.  Begin:
+F1_Begin:
+    # 1.   8[obj]:P = 0
+	movq $0,8(%rax)
+    # 2.   return 
+	addq $8,%rsp
+	ret
+    # 3.  End:
+F1_End:
+    # _init_A (obj, a)
+	.p2align 4,0x90
+	.globl _init_A
+_init_A:
+	pushq %rbx
+	movq %rdi,%rbx
+	movq %rsi,%rax
+    # 0.  Begin:
+F2_Begin:
+    # 1.   8[obj]:P = a
+	movq %rax,8(%rbx)
+    # 2.   return 
+	popq %rbx
+	ret
+    # 3.  End:
+F2_End:
+    # _A_go (obj)
+    # (b)
+	.p2align 4,0x90
+	.globl _A_go
+_A_go:
+	pushq %rbx
+	movq %rdi,%rax
+    # 0.  Begin:
+F3_Begin:
+    # 1.   t1 = call _malloc(8)
+	movq $8,%rdi
+	call _malloc
+	movq %rax,%rbx
+    # 2.   8[obj]:P = t1
+	movq %rbx,8(%rax)
+    # 3.   t2 = call _malloc(8)
+	movq $8,%rdi
+	call _malloc
+	movq %rax,%rbx
+    # 4.   b = t2
+    # 5.   t3 = 8[obj]:P
+	movq 8(%rax),%rcx
+    # 6.   t4 = 0 * 4
+	movq $0,%rdx
+	imulq $4,%rdx
+    # 7.   t5 = t3 + t4
+	addq %rdx,%rcx
+    # 8.   [t5]:I = 1
+	movl $1,(%rcx)
+    # 9.   t6 = 8[obj]:P
+	movq 8(%rax),%rcx
+    # 10.  t7 = 1 * 4
+	movq $1,%rdx
+	imulq $4,%rdx
+    # 11.  t8 = t6 + t7
+	addq %rdx,%rcx
+    # 12.  [t8]:I = 2
+	movl $2,(%rcx)
+    # 13.  t9 = 0 * 4
+	movq $0,%rcx
+	imulq $4,%rcx
+    # 14.  t10 = b + t9
+	movq %rcx,%r10
+	movq %rbx,%rcx
+	addq %r10,%rcx
+    # 15.  [t10]:I = 3
+	movl $3,(%rcx)
+    # 16.  t11 = 1 * 4
+	movq $1,%rcx
+	imulq $4,%rcx
+    # 17.  t12 = b + t11
+	movq %rcx,%r10
+	movq %rbx,%rcx
+	addq %r10,%rcx
+    # 18.  [t12]:I = 4
+	movl $4,(%rcx)
+    # 19.  t13 = 8[obj]:P
+	movq 8(%rax),%rcx
+    # 20.  t14 = 1 * 4
+	movq $1,%rdx
+	imulq $4,%rdx
+    # 21.  t15 = t13 + t14
+	addq %rdx,%rcx
+    # 22.  t16 = [t15]:I
+	movslq (%rcx),%rcx
+    # 23.  call _printInt(t16)
+	movq %rcx,%rdi
+	call _printInt
+    # 24.  t17 = 1 * 4
+	movq $1,%rcx
+	imulq $4,%rcx
+    # 25.  t18 = b + t17
+	addq %rcx,%rbx
+    # 26.  t19 = [t18]:I
+	movslq (%rbx),%rbx
+    # 27.  call _printInt(t19)
+	movq %rbx,%rdi
+	call _printInt
+    # 28.  t20 = 8[obj]:P
+	movq 8(%rax),%rax
+    # 29.  t21 = 0 * 4
+	movq $0,%rbx
+	imulq $4,%rbx
+    # 30.  t22 = t20 + t21
+	addq %rbx,%rax
+    # 31.  t23 = [t22]:I
+	movslq (%rax),%rax
+    # 32.  return t23
+	popq %rbx
+	ret
+    # 33. End:
+F3_End:

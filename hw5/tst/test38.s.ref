@@ -1,0 +1,243 @@
+	.text
+	.globl _class_A
+_class_A:
+	.quad _A_selectionSort
+    # _main ()
+    # (a, numbers, cnt)
+	.p2align 4,0x90
+	.globl _main
+_main:
+	pushq %rbx
+    # 0.  Begin:
+F0_Begin:
+    # 1.   t1 = call _malloc(8)
+	movq $8,%rdi
+	call _malloc
+    # 2.   [t1]:P = _class_A
+	leaq _class_A(%rip),%r10
+	movq %r10,(%rax)
+    # 3.   call _init0_A(t1)
+	movq %rax,%rdi
+	call _init0_A
+    # 4.   a = t1
+    # 5.   t2 = call _malloc(40)
+	movq $40,%rdi
+	call _malloc
+	movq %rax,%rbx
+    # 6.   numbers = t2
+    # 7.   cnt = 0
+	movq $0,%rcx
+    # 8.  L0:
+F0_L0:
+    # 9.   if cnt >= 10 goto L1
+	cmpq $10,%rcx
+	jge F0_L1
+    # 10.  t3 = 10 - cnt
+	movq $10,%rdx
+	subq %rcx,%rdx
+    # 11.  t4 = cnt * 4
+	movq %rcx,%rsi
+	imulq $4,%rsi
+    # 12.  t5 = numbers + t4
+	movq %rsi,%r10
+	movq %rbx,%rsi
+	addq %r10,%rsi
+    # 13.  [t5]:I = t3
+	movl %edx,(%rsi)
+    # 14.  t6 = cnt + 1
+	movq %rcx,%rdx
+	addq $1,%rdx
+    # 15.  cnt = t6
+	movq %rdx,%rcx
+    # 16.  goto L0
+	jmp F0_L0
+    # 17. L1:
+F0_L1:
+    # 18.  t7 = [a]:P
+	movq (%rax),%rdx
+    # 19.  t8 = [t7]:P
+	movq (%rdx),%rdx
+    # 20.  call * t8(a, numbers, cnt)
+	movq %rdx,%r11
+	movq %rax,%rdi
+	movq %rbx,%rsi
+	movq %rcx,%rdx
+	call * %r11
+    # 21.  call _printStr("Your numbers in sorted order are:")
+	leaq _S0(%rip),%rdi
+	call _printStr
+    # 22.  cnt = 0
+	movq $0,%rcx
+    # 23. L2:
+F0_L2:
+    # 24.  if cnt >= 10 goto L3
+	cmpq $10,%rcx
+	jge F0_L3
+    # 25.  t9 = cnt * 4
+	movq %rcx,%rax
+	imulq $4,%rax
+    # 26.  t10 = numbers + t9
+	movq %rax,%r10
+	movq %rbx,%rax
+	addq %r10,%rax
+    # 27.  t11 = [t10]:I
+	movslq (%rax),%rax
+    # 28.  call _printInt(t11)
+	movq %rax,%rdi
+	call _printInt
+    # 29.  t12 = cnt + 1
+	movq %rcx,%rax
+	addq $1,%rax
+    # 30.  cnt = t12
+	movq %rax,%rcx
+    # 31.  goto L2
+	jmp F0_L2
+    # 32. L3:
+F0_L3:
+    # 33.  return 
+	popq %rbx
+	ret
+    # 34. End:
+F0_End:
+    # _init0_A (obj)
+	.p2align 4,0x90
+	.globl _init0_A
+_init0_A:
+	subq $8,%rsp
+    # 0.  Begin:
+F1_Begin:
+    # 1.   return 
+	addq $8,%rsp
+	ret
+    # 2.  End:
+F1_End:
+    # _init_A (obj)
+	.p2align 4,0x90
+	.globl _init_A
+_init_A:
+	subq $8,%rsp
+    # 0.  Begin:
+F2_Begin:
+    # 1.   return 
+	addq $8,%rsp
+	ret
+    # 2.  End:
+F2_End:
+    # _A_selectionSort (obj, A, count)
+    # (temp, i, j, k)
+	.p2align 4,0x90
+	.globl _A_selectionSort
+_A_selectionSort:
+	pushq %rbx
+	movq %rsi,%rbx
+	movq %rdx,%rax
+    # 0.  Begin:
+F3_Begin:
+    # 1.   t1 = count - 1
+	subq $1,%rax
+    # 2.   i = t1
+    # 3.  L4:
+F3_L4:
+    # 4.   if i < 0 goto L5
+	cmpq $0,%rax
+	jl F3_L5
+    # 5.   j = 0
+	movq $0,%rcx
+    # 6.   k = 0
+	movq $0,%rdx
+    # 7.  L6:
+F3_L6:
+    # 8.   if j > i goto L7
+	cmpq %rax,%rcx
+	jg F3_L7
+    # 9.   t2 = j * 4
+	movq %rcx,%rsi
+	imulq $4,%rsi
+    # 10.  t3 = A + t2
+	movq %rsi,%r10
+	movq %rbx,%rsi
+	addq %r10,%rsi
+    # 11.  t4 = [t3]:I
+	movslq (%rsi),%rsi
+    # 12.  t5 = k * 4
+	movq %rdx,%rdi
+	imulq $4,%rdi
+    # 13.  t6 = A + t5
+	movq %rdi,%r10
+	movq %rbx,%rdi
+	addq %r10,%rdi
+    # 14.  t7 = [t6]:I
+	movslq (%rdi),%rdi
+    # 15.  if t4 <= t7 goto L8
+	cmpq %rdi,%rsi
+	jle F3_L8
+    # 16.  k = j
+	movq %rcx,%rdx
+    # 17. L8:
+F3_L8:
+    # 18.  t8 = j + 1
+	movq %rcx,%rsi
+	addq $1,%rsi
+    # 19.  j = t8
+	movq %rsi,%rcx
+    # 20.  goto L6
+	jmp F3_L6
+    # 21. L7:
+F3_L7:
+    # 22.  if k == i goto L9
+	cmpq %rax,%rdx
+	je F3_L9
+    # 23.  t9 = k * 4
+	movq %rdx,%rcx
+	imulq $4,%rcx
+    # 24.  t10 = A + t9
+	movq %rcx,%r10
+	movq %rbx,%rcx
+	addq %r10,%rcx
+    # 25.  t11 = [t10]:I
+	movslq (%rcx),%rcx
+    # 26.  temp = t11
+    # 27.  t12 = i * 4
+	movq %rax,%rsi
+	imulq $4,%rsi
+    # 28.  t13 = A + t12
+	movq %rsi,%r10
+	movq %rbx,%rsi
+	addq %r10,%rsi
+    # 29.  t14 = [t13]:I
+	movslq (%rsi),%rsi
+    # 30.  t15 = k * 4
+	imulq $4,%rdx
+    # 31.  t16 = A + t15
+	movq %rdx,%r10
+	movq %rbx,%rdx
+	addq %r10,%rdx
+    # 32.  [t16]:I = t14
+	movl %esi,(%rdx)
+    # 33.  t17 = i * 4
+	movq %rax,%rdx
+	imulq $4,%rdx
+    # 34.  t18 = A + t17
+	movq %rdx,%r10
+	movq %rbx,%rdx
+	addq %r10,%rdx
+    # 35.  [t18]:I = temp
+	movl %ecx,(%rdx)
+    # 36. L9:
+F3_L9:
+    # 37.  t19 = i - 1
+	movq %rax,%rcx
+	subq $1,%rcx
+    # 38.  i = t19
+	movq %rcx,%rax
+    # 39.  goto L4
+	jmp F3_L4
+    # 40. L5:
+F3_L5:
+    # 41.  return 
+	popq %rbx
+	ret
+    # 42. End:
+F3_End:
+_S0:
+	.asciz "Your numbers in sorted order are:"

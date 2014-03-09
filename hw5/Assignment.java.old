@@ -1,0 +1,261 @@
+import java.util.*;
+import java.util.Map.Entry;
+
+/** Register assignment */
+
+// MY CODE BELOW ---------------------------------
+class Assignment {
+	static class TReg {
+		IR.Reg treg;
+		X86.Reg xreg;
+		Liveness.Interval n;
+
+		private TReg(IR.Reg reg, Liveness.Interval n) {
+			this.treg = reg;
+			this.n = n;
+			this.xreg = null;
+		}
+		private TReg(IR.Reg reg, Liveness.Interval n, X86.Reg xreg) {
+			this.treg = reg;
+			this.n = n;
+			this.xreg = xreg;
+		}	
+		public String toString() {
+			return treg + ": (" + n.start + " - " + n.end + ") maps to: " + xreg;
+		}
+	}
+	static class StartComparator implements Comparator<TReg> {
+		@Override
+		public int compare(TReg a, TReg b) {
+			return a.n.start < b.n.start ? -1 : a.n.start == b.n.start ? 0 : 1;
+		}
+	}
+
+	static class EndComparator implements Comparator<TReg> {
+		@Override
+		public int compare (TReg a, TReg b) {
+			return a.n.end < b.n.end ? -1 : a.n.end == b.n.end ? 0 : 1;
+		}
+	}
+	// MY CODE ABOVE ---------------------------------
+
+
+	/** Assign IR.Regs to locations described by X86.Operands. */
+	static Map<IR.Reg,X86.Reg> assignRegisters(IR.Func func,IR.RegSet[] liveRanges) {
+		Map<IR.Reg,X86.Reg> env = new HashMap<IR.Reg,X86.Reg>();
+
+		// Approximate live ranges by live intervals
+		Map<IR.Reg,Liveness.Interval> liveIntervals = Liveness.calculateLiveIntervals(liveRanges);
+
+		// MY CODE BELOW:
+		// Create a list of liveIntervals in ascending order of start
+		List<TReg> ascendingStarts = new ArrayList<TReg>();
+		List<TReg> regActive = new ArrayList<TReg>();
+
+		// Populate the lists of TRegs
+		for (Map.Entry<IR.Reg,Liveness.Interval> entry : liveIntervals.entrySet()) {
+			ascendingStarts.add(new TReg(entry.getKey(), entry.getValue()));
+		}
+
+		// Sort the lists
+		Collections.sort(ascendingStarts, new StartComparator());
+
+/*		System.err.println("This is the ascending start list:");		
+		for (TReg t : ascendingStarts) {
+			System.err.println(t.toString());
+		}
+*/
+
+
+		// Get preferences for assignments. 
+		// Preferences are not binding. In particular, ranges that span a 
+		// a call will never end up in a caller-save register, but we 
+		// don't worry about that now.
+		Map<IR.Reg,X86.Reg> preferences = getPreferences(func);
+
+		// For now, do extremely simplistic allocation: simply allocate registers to
+		// IR.Reg's eagerly.  Once a register is used, we don't
+		// try to use it again, so we will very quickly run out.  
+
+		// Keep track of available registers
+
+		boolean[] regAvailable 	= new boolean[X86.allRegs.length];
+
+		for (int i = 0; i < regAvailable.length; i++) {
+			regAvailable[i] = true;
+
+		}
+		regAvailable[X86.RSP.r]     = false;
+		regAvailable[IR.tempReg1.r] = false;
+		regAvailable[IR.tempReg2.r] = false;
+
+
+		// Now that we have the two lists, we can implement the Linear Scan Allocation Algorithm
+		for (TReg i : ascendingStarts) {
+			IR.Reg t = i.treg;
+			X86.Reg treg = null;
+			Liveness.Interval n = i.n;
+			Collections.sort(regActive, new EndComparator());
+			List<TReg> regActiveTemp = new ArrayList<TReg>();
+			// Deep copy the active list
+			for (TReg tempReg : regActive) {
+				regActiveTemp.add(tempReg);
+			}
+			for (TReg j : regActive) {
+				if (j.n.end >= i.n.start)
+					break;
+				regActiveTemp.remove(j);
+				regAvailable[j.xreg.r]= true; 
+			}
+			regActive = regActiveTemp;
+			for (X86.Reg reg : X86.allRegs) 
+				if (regAvailable[reg.r]) {
+					treg = reg;
+					regAvailable[reg.r] = false; 
+					regActive.add(new TReg(t,n,treg));
+					env.put(t, treg);
+					break;
+				}
+			if (treg == null) {
+				// couldn't find a register
+				System.err.println("oops: out of registers");
+				System.err.println("Spill...");
+			}
+			// DEBUG
+			//System.err.println("allocating " + t + " to " + treg);
+		}
+		
+		//DEBUG
+		System.err.println("This is the value of env:");
+		for (Map.Entry<IR.Reg,X86.Reg> myEntry : env.entrySet()){
+			System.err.println("IR Reg: " + myEntry.getKey() +
+					" X86 Reg: " + X86.allRegs[myEntry.getValue().r] );
+		}
+
+		return env;
+
+
+	}
+
+	// Work through the list of live IR registers.
+	// Even with our extremely simplistic approach, we must be careful
+	// to handle callee save and caller save registers.  Again for simplicity,
+	// we simply refuse to use a caller-save register for any operand whose
+	// live interval includes a call; that way, we never have to worry about
+	// saving caller-save registers at all.
+
+	/*		
+		for (Map.Entry<IR.Reg,Liveness.Interval> me : liveIntervals.entrySet())  {
+			IR.Reg t = me.getKey();
+			X86.Reg treg = null;
+			Liveness.Interval n = me.getValue(); 
+			System.err.println("Liveness Interval: " + n.start + " - " + n.end);
+			if (intervalContainsCall(func,n)) {
+				// insist on a callee-save reg (ignoring any preference)
+				for (X86.Reg reg : X86.calleeSaveRegs) 
+					if (regAvailable[reg.r]) {
+						treg = reg;
+						break;
+					}
+			} else {
+				// try first for a preference register (always caller-save)
+				X86.Reg preg = preferences.get(t);
+				if (preg !=null && regAvailable[preg.r]) 
+					treg = preg;
+				if (treg == null) 
+					// try for an arbitrary caller-save reg
+					for (X86.Reg reg : X86.callerSaveRegs) 
+						if (regAvailable[reg.r]) {
+							treg = reg;
+							break;
+						};
+						if (treg == null) 
+							// otherwise, try a callee-save 
+							for (X86.Reg reg : X86.calleeSaveRegs) 
+								if (regAvailable[reg.r]) {
+									treg = reg;
+									break;
+								}
+			}
+			if (treg == null) {
+				// couldn't find a register
+				System.err.println("oops: out of registers");
+				assert(false);
+			}
+			// We found a register; record it
+			regAvailable[treg.r] = false;
+			env.put(t,treg);
+			// DEBUG
+			System.err.println("allocating " + t + " to " + treg);
+		}
+
+		// For documentation purposes
+		System.out.println("# Allocation map");
+		for (Map.Entry<IR.Reg,X86.Reg> me : env.entrySet()) 
+			System.out.println("# " + me.getKey() + "\t" + me.getValue());
+
+		return env;
+	}
+	 */
+
+	/**  Return true if specified interval includes an IR instruction
+       that will cause an X86.call (or invoke an X86.divide) **/
+	static boolean intervalContainsCall(IR.Func func,Liveness.Interval n) {
+		for (int i = n.start+1; i <= n.end; i++)
+			if (func.code[i] instanceof IR.Call ||
+					(func.code[i] instanceof IR.Binop && ((IR.Binop) func.code[i]).op == IR.ArithOP.DIV))
+				return true;
+		return false;
+	}
+
+	// Find insertion point for x in a, assuming a is sorted in ascending natural order 
+	static int insertionPoint(List<Integer> a, int x) {
+		int i = 0;
+		for (Integer y : a) {
+			if (x <= y)
+				return i;
+			i++;
+		}
+		return i;
+	}
+
+	/** Calculate (non-binding) preferences for register assignments.
+      Note: all preference registers should be caller-save (otherwise they're ignored) **/
+	static Map<IR.Reg,X86.Reg> getPreferences(IR.Func func) {
+		Map<IR.Reg,X86.Reg> preferences = new HashMap<IR.Reg,X86.Reg>(); 
+
+		// Incoming arguments from callee's perspective
+		for (int i = 0; i < func.params.length; i++)  
+			preferences.put(new IR.Id(func.params[i]),X86.argRegs[i]); 
+
+		for (IR.Inst c : func.code) {
+			if (c instanceof IR.Call) {
+				IR.Call cl = (IR.Call) c;
+				// Arguments from caller's perspective
+				for (int i = 0; i < cl.args.length; i++) {
+					IR.Src argRand = cl.args[i];
+					if (argRand instanceof IR.Reg) 
+						preferences.put((IR.Reg) argRand,X86.argRegs[i]);
+				}
+				// Return value from caller's perspective
+				if (cl.rdst instanceof IR.Reg)
+					preferences.put((IR.Reg) cl.rdst,X86.RAX);
+			} else if (c instanceof IR.Return) {
+				// Return value from callee's perspective
+				IR.Return r = (IR.Return) c;
+				if (r.val instanceof IR.Reg) 
+					preferences.put((IR.Reg) r.val,X86.RAX);
+			} else if (c instanceof IR.Binop) {
+				IR.Binop b = (IR.Binop) c;
+				if (b.op == IR.ArithOP.DIV) {
+					// Argument and result of DIV
+					if (b.src1 instanceof IR.Reg)
+						preferences.put((IR.Reg) b.src1,X86.RAX);
+					if (b.dst instanceof IR.Reg)
+						preferences.put((IR.Reg) b.dst,X86.RAX);
+				}
+			}
+		}
+		return preferences;
+	}
+}

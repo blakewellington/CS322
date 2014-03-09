@@ -1,0 +1,82 @@
+	.text
+    # _main ()
+    # (a, i)
+# Allocation map
+# t1	%rax
+# t2	%rcx
+# t3	%rdx
+# t4	%rsi
+# t5	%rdi
+# t6	%r8
+# a	%rbx
+# t7	%r9
+# t8	%rbp
+# t9	%r12
+# i	%r13
+	.p2align 4,0x90
+	.globl _main
+_main:
+	pushq %rbx
+	pushq %rbp
+	pushq %r12
+	pushq %r13
+	subq $8,%rsp
+    # 0.  Begin:
+F0_Begin:
+    # 1.   t1 = call _malloc(8)
+	movq $8,%rdi
+	call _malloc
+    # 2.   a = t1
+	movq %rax,%rbx
+    # 3.   i = 0
+	movq $0,%r13
+    # 4.   t2 = 0 * 4
+	movq $0,%rcx
+	imulq $4,%rcx
+    # 5.   t3 = a + t2
+	movq %rbx,%rdx
+	addq %rcx,%rdx
+    # 6.   [t3]:I = 3
+	movl $3,(%rdx)
+    # 7.   t4 = 1 * 4
+	movq $1,%rsi
+	imulq $4,%rsi
+    # 8.   t5 = a + t4
+	movq %rbx,%rdi
+	addq %rsi,%rdi
+    # 9.   [t5]:I = 5
+	movl $5,(%rdi)
+    # 10. L0:
+F0_L0:
+    # 11.  if i >= 2 goto L1
+	cmpq $2,%r13
+	jge F0_L1
+    # 12.  t6 = i * 4
+	movq %r13,%r8
+	imulq $4,%r8
+    # 13.  t7 = a + t6
+	movq %rbx,%r9
+	addq %r8,%r9
+    # 14.  t8 = [t7]:I
+	movslq (%r9),%rbp
+    # 15.  call _printInt(t8)
+	movq %rbp,%rdi
+	call _printInt
+    # 16.  t9 = i + 1
+	movq %r13,%r12
+	addq $1,%r12
+    # 17.  i = t9
+	movq %r12,%r13
+    # 18.  goto L0
+	jmp F0_L0
+    # 19. L1:
+F0_L1:
+    # 20.  return 
+	addq $8,%rsp
+	popq %r13
+	popq %r12
+	popq %rbp
+	popq %rbx
+	ret
+    # 21. End:
+F0_End:
